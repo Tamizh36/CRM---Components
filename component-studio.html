@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Component Studio</title>
+<style>
+:root{
+  --bg:#FBFBFC;
+  --panel:#FFFFFF;
+  --line:#E8E9EE;
+  --line-2:#F0F1F5;
+  --text:#14161C;
+  --text-2:#4B5162;
+  --muted:#8A90A0;
+  --accent:#5464F2;
+  --accent-bg:#EEF0FE;
+  --accent-line:#C9CFFB;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:#D7D9E2;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#C2C5D2;background-clip:content-box;border:3px solid transparent}
+::-webkit-scrollbar-track{background:transparent}
+
+.app{height:100vh;display:flex;flex-direction:column}
+
+/* ---------------- top bar ---------------- */
+.topbar{
+  height:56px;flex:0 0 56px;display:flex;align-items:center;gap:16px;padding:0 18px;
+  background:var(--panel);border-bottom:1px solid var(--line);z-index:30;
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-.015em}
+.logo{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;color:#fff;font-size:13px;font-weight:800;
+  background:linear-gradient(140deg,#6C7BFF,#4A5AEE);box-shadow:0 2px 6px rgba(84,100,242,.32)}
+.divider{width:1px;height:22px;background:var(--line)}
+.crumbs{display:flex;align-items:center;gap:8px;color:var(--text-2);font-weight:520}
+.crumbs .sep{color:#C3C7D3;display:flex}
+.crumbs .cur{color:var(--accent);font-weight:640}
+.spacer{flex:1}
+.tbtn{height:31px;padding:0 12px;border:1px solid var(--line);background:var(--panel);border-radius:8px;color:var(--text-2);
+  cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:.14s;font-size:12.5px;font-weight:540}
+.tbtn:hover{background:#F7F8FA;border-color:#DCDEE7;color:var(--text)}
+.tbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.tbtn.primary:hover{background:#4351E8;border-color:#4351E8}
+
+.body{flex:1;display:flex;min-height:0}
+
+/* ---------------- library rail ---------------- */
+.rail{width:286px;flex:0 0 286px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.rail-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px}
+.cap{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.icon-btn{width:22px;height:22px;border:0;background:transparent;color:var(--muted);cursor:pointer;display:grid;place-items:center;border-radius:6px}
+.icon-btn:hover{background:#F2F3F7;color:var(--text-2)}
+.search{position:relative;padding:0 14px 12px}
+.search svg{position:absolute;left:24px;top:9px;color:var(--muted)}
+.search input{width:100%;height:34px;border:1px solid var(--line);border-radius:9px;background:#FBFBFD;padding:0 10px 0 32px;outline:0;transition:.14s}
+.search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(84,100,242,.12);background:#fff}
+.rail-scroll{flex:1;overflow-y:auto;padding:0 10px 12px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;cursor:pointer;color:var(--text-2);
+  transition:.12s;user-select:none;font-weight:540;font-size:13.5px;margin-bottom:2px}
+.nav-item:hover{background:#F7F8FA}
+.nav-item.active{background:var(--accent-bg);color:var(--accent);font-weight:640;box-shadow:inset 0 0 0 1px var(--accent-line)}
+.nav-item.locked{opacity:.55}
+.nav-ico{width:18px;height:18px;display:grid;place-items:center;flex:0 0 18px}
+.nav-dot{margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.nav-tag{margin-left:auto;font-size:10px;font-family:var(--mono);color:var(--muted);background:#F4F5F8;border:1px solid var(--line);
+  border-radius:5px;padding:1px 5px}
+.rail-foot{border-top:1px solid var(--line);padding:12px 18px;color:var(--muted);font-size:11px;line-height:1.65}
+.rail-foot b{color:var(--text-2);font-weight:620}
+
+/* ---------------- canvas ---------------- */
+.canvas-wrap{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg);overflow:auto}
+.canvas-inner{padding:26px 30px 60px;min-width:max-content}
+.art-head{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px}
+.art-title{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.art-sub{color:var(--muted);font-size:13px;margin-top:3px}
+.zoom{margin-left:auto;display:flex;gap:8px;align-items:center}
+.chip{height:29px;display:inline-flex;align-items:center;padding:0 11px;border:1px solid var(--line);border-radius:8px;
+  background:var(--panel);color:var(--text-2);font-size:12px;font-weight:540;white-space:nowrap}
+.seg{display:inline-flex;background:#EDEEF3;border-radius:9px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;height:25px;border-radius:7px;cursor:pointer;color:var(--text-2);
+  font-size:12px;font-weight:560;transition:.14s;white-space:nowrap}
+.seg button:hover{color:var(--text)}
+.seg button.on{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(20,24,36,.14)}
+
+.artboard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px 30px 30px;display:inline-block;min-width:100%}
+.artboard.dark{background:#181B23;border-color:#2A2F3C}
+.artboard.dark .mx-col,.artboard.dark .mx-row-label{color:#8A90A0}
+.artboard.dark .mx-row-label{color:#C9CDD8}
+
+/* matrix */
+.mx{display:grid;gap:0 16px;align-items:center}
+.mx-col{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+  text-align:center;padding:0 0 14px}
+.mx-row-label{font-size:13px;font-weight:640;color:var(--text);white-space:nowrap;padding-right:14px}
+.mx-cell{display:flex;align-items:center;justify-content:center;padding:9px 0;border-radius:9px;cursor:pointer;transition:.13s}
+.mx-cell:hover{background:#F7F8FB}
+.artboard.dark .mx-cell:hover{background:#20242E}
+.mx-cell.on{background:var(--accent-bg);box-shadow:inset 0 0 0 1px var(--accent-line)}
+.mx-rowsep{grid-column:1/-1;height:1px;background:var(--line-2)}
+.artboard.dark .mx-rowsep{background:#262B36}
+
+/* single preview */
+.stage{display:flex;align-items:center;justify-content:center;min-height:360px}
+.frame{position:relative;display:inline-flex;flex-direction:column;align-items:center}
+.sel{position:absolute;inset:-1px;border:1px solid var(--accent);pointer-events:none}
+.handle{position:absolute;width:7px;height:7px;background:#fff;border:1px solid var(--accent);border-radius:1px}
+.handle.tl{left:-4px;top:-4px}.handle.tr{right:-4px;top:-4px}.handle.bl{left:-4px;bottom:-4px}.handle.br{right:-4px;bottom:-4px}
+.dim{position:absolute;left:50%;transform:translateX(-50%);bottom:-27px;background:var(--accent);color:#fff;font-size:11px;
+  font-weight:640;padding:2px 7px;border-radius:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* groups + sizes */
+.stack{display:flex;flex-direction:column;gap:14px}
+.group-row{border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:13px;background:#FCFCFD}
+.group-head{display:flex;align-items:baseline;gap:10px}
+.group-title{font-weight:660}
+.group-use{font-size:11.5px;color:var(--muted)}
+.group-btns{display:flex;gap:8px;flex-wrap:wrap}
+.size-row{display:flex;gap:18px;flex-wrap:wrap}
+.size-card{border:1px solid var(--line);border-radius:12px;padding:22px 26px 14px;display:flex;flex-direction:column;
+  align-items:center;gap:14px;cursor:pointer;transition:.14s;background:#FCFCFD;min-width:170px}
+.size-card:hover{border-color:#CFD3E6}
+.size-card.on{border-color:var(--accent);box-shadow:0 0 0 3px rgba(84,100,242,.11);background:#fff}
+.size-meta{text-align:center}
+.size-meta b{display:block;font-size:13px}
+.size-meta span{font-size:11px;color:var(--muted)}
+
+/* ---------------- inspector ---------------- */
+.insp{width:392px;flex:0 0 392px;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;border-bottom:1px solid var(--line);padding:0 24px}
+.tabs button{flex:1;border:0;background:transparent;padding:15px 0 13px;cursor:pointer;color:var(--muted);font-weight:600;
+  font-size:13.5px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.14s}
+.tabs button:hover{color:var(--text-2)}
+.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+.insp-scroll{flex:1;overflow-y:auto;padding:20px 24px 40px}
+.grp{margin-bottom:26px}
+.grp-t{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.grp-t .link{color:var(--accent);font-size:11.5px;font-weight:600;cursor:pointer;text-transform:none;letter-spacing:0}
+.grp-t .link:hover{text-decoration:underline}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 13px;cursor:pointer;color:var(--text-2);
+  font-size:12.5px;transition:.13s;font-weight:540;white-space:nowrap}
+.pill:hover{border-color:#CFD3E6;background:#FAFAFC}
+.pill.on{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent);font-weight:640}
+.radios{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px 8px}
+.radio{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text-2);font-size:12.8px;user-select:none;white-space:nowrap}
+.radio i{width:15px;height:15px;border-radius:50%;border:1.5px solid #C8CBD6;flex:0 0 15px;display:grid;place-items:center;transition:.14s}
+.radio.on{color:var(--text);font-weight:560}
+.radio.on i{border-color:var(--accent);border-width:4.5px}
+.radio:hover i{border-color:#A9AEC0}
+.radio.on:hover i{border-color:var(--accent)}
+
+.tokens{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.trow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;font-size:12.3px}
+.trow:nth-child(odd){background:#FAFAFC}
+.trow .tk{color:var(--text-2);font-family:var(--mono);font-size:11.5px}
+.trow .tv{font-weight:620;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:7px;text-align:right}
+.trow .tv.hex{color:var(--accent);font-family:var(--mono);font-size:11.5px}
+.sw{width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.14);flex:0 0 11px}
+.sw.grad{width:22px}
+.tokchips{margin-top:10px}
+.tok{display:inline-block;font-family:var(--mono);font-size:10.5px;background:#F6F7FA;border:1px solid var(--line);border-radius:5px;
+  padding:2px 6px;margin:0 5px 5px 0;color:var(--text-2)}
+
+.callout{background:#FFF8E6;border:1px solid #F3DFA5;border-radius:10px;padding:12px 13px;display:flex;gap:10px;
+  color:#8A6410;font-size:12.3px;font-style:italic;line-height:1.55}
+.callout svg{flex:0 0 16px;margin-top:1px;color:#C48A16}
+.callout.plain{font-style:normal}
+
+pre.code{margin:0;background:#14161C;color:#D7DBE8;border-radius:10px;padding:14px;font-family:var(--mono);font-size:10.8px;
+  line-height:1.65;overflow:auto;max-height:340px}
+.code .c-p{color:#93A3FF}.code .c-v{color:#7FE3B1}.code .c-s{color:#5C6479}
+.kv{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:5px 0;font-size:12.3px}
+.kv .k{color:var(--muted);flex:0 0 auto}
+.kv .v{color:var(--text);text-align:right;font-family:var(--mono);font-size:11.3px;word-break:break-word;display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.doc ul{margin:0;padding-left:17px}
+.doc li{margin:6px 0;color:var(--text-2);font-size:12.4px}
+.doc li b{color:var(--text);font-weight:620}
+.do li::marker{color:#16A34A}.dont li::marker{color:#EF4444}
+.copy{border:1px solid var(--line);background:#FAFAFC;border-radius:6px;padding:3px 9px;cursor:pointer;font-size:10.5px;
+  color:var(--text-2);font-weight:660;letter-spacing:.04em;text-transform:uppercase}
+.copy:hover{background:#fff;color:var(--text)}
+.field{width:100%;height:34px;border:1px solid var(--line);border-radius:9px;background:#FBFBFD;padding:0 10px;outline:0;transition:.13s}
+.field:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(84,100,242,.12);background:#fff}
+.rowsw{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0}
+.rowsw label{color:var(--text-2);font-size:12.8px}
+.tog{width:36px;height:21px;border-radius:20px;background:#DFE1EA;position:relative;cursor:pointer;transition:.16s;flex:0 0 36px}
+.tog::after{content:"";position:absolute;left:2px;top:2px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.16s;box-shadow:0 1px 2px rgba(0,0,0,.22)}
+.tog.on{background:var(--accent)}.tog.on::after{transform:translateX(15px)}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(15,18,28,.44);display:none;z-index:80;backdrop-filter:blur(3px)}
+.modal.on{display:grid;place-items:center}
+.sheet{width:min(900px,92vw);height:min(80vh,780px);background:#fff;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 26px 70px -20px rgba(10,14,26,.5)}
+.sheet-head{height:52px;flex:0 0 52px;display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid var(--line)}
+.sheet-body{flex:1;overflow:auto;padding:18px;background:#FBFBFD}
+.sheet-body pre{margin:0;font-family:var(--mono);font-size:11.5px;line-height:1.62;color:var(--text-2);white-space:pre-wrap}
+
+/* rendered component */
+.btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;
+  font-family:"Zoho Puvi","Inter",-apple-system,"Segoe UI",Roboto,sans-serif;white-space:nowrap;user-select:none;cursor:pointer;
+  overflow:hidden;position:relative;border-style:solid;transition:background .12s linear,border-color .12s linear}
+.btn.no-int{cursor:default}
+.btn[data-state="disabled"]{cursor:not-allowed}
+.spin{border-radius:50%;border-style:solid;border-color:currentColor;border-top-color:transparent!important;animation:sp .7s linear infinite;display:block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.lnk{font-family:"Zoho Puvi","Inter",-apple-system,sans-serif;font-size:14px;font-weight:500;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand"><span class="logo">C</span><span>Component Studio</span></div>
+    <div class="divider"></div>
+    <div class="crumbs" id="crumbs"></div>
+    <div class="spacer"></div>
+    <button class="tbtn" id="btnSource">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Markdown
+    </button>
+    <button class="tbtn primary" id="btnCopyCss">Copy CSS</button>
+  </header>
+
+  <div class="body">
+
+    <aside class="rail">
+      <div class="rail-head">
+        <span class="cap">Library</span>
+        <button class="icon-btn" title="Add a component .md">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8.5v7M8.5 12h7"/></svg>
+        </button>
+      </div>
+      <div class="search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+        <input id="findInput" placeholder="Find components...">
+      </div>
+      <div class="rail-scroll" id="navList"></div>
+      <div class="rail-foot" id="railFoot"></div>
+    </aside>
+
+    <section class="canvas-wrap">
+      <div class="canvas-inner">
+        <div class="art-head">
+          <div>
+            <div class="art-title" id="artTitle">Button Artboard</div>
+            <div class="art-sub">Viewing visual states and styles parsed from markdown schemas</div>
+          </div>
+          <div class="zoom">
+            <div class="seg" id="modeSeg"></div>
+            <div class="seg" id="bgSeg">
+              <button data-bg="light" class="on">Light</button>
+              <button data-bg="dark">Dark</button>
+            </div>
+            <span class="chip" id="zoomChip">Canvas: 100%</span>
+          </div>
+        </div>
+        <div class="artboard" id="artboard"></div>
+      </div>
+    </section>
+
+    <aside class="insp">
+      <div class="tabs" id="tabs">
+        <button data-tab="design" class="on">Design</button>
+        <button data-tab="inspect">Inspect</button>
+      </div>
+      <div class="insp-scroll" id="inspBody"></div>
+    </aside>
+
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <div class="sheet-head"><b id="sheetTitle">Buttons.md</b><div class="spacer"></div><button class="tbtn" id="sheetClose">Close</button></div>
+    <div class="sheet-body"><pre id="sheetPre"></pre></div>
+  </div>
+</div>
+
+<script type="text/plain" id="md-Buttons"># Buttons
+> Category: Components / Atoms > Version: v2.0.0
+
+Buttons allow users to take actions, and make choices, with a single tap. They communicate actions and are typically placed throughout your UI in places like dialogs, forms, toolbars, and cards.
+
+---
+
+## Anatomy
+
+The visual breakdown and structure of the standard CRM Button component, with full color token references per layer.
+
+### Container Layer
+
+| Part | Description |
+|---|---|
+| Type | Frame with Horizontal Auto Layout |
+| Corner Radius | 6px (Default), 4px (Small, Extreme Small) |
+| Border | 0px (filled/ghost buttons), 1px (outline/default buttons) |
+| Height | 32px (Default), 27px (Small), 19px (Extreme Small) |
+| Clip Content | Yes |
+
+#### Container Background Colors
+
+| Variant | Default | Hover | Click | Disabled |
+|---|---|---|---|---|
+| Primary | Gradient ↑ #124DC3 → #5767F6 (tokens 90298:926, 90298:925) | Gradient ↑ #0E3B98 → #3E4DEC (tokens 90298:961, 90298:960) | Solid #1344A9 (token 90298:962) | Solid #ADB3EE (token 90298:963) |
+| Default | Gradient ↓ #FFFFFF → #F1F0F7 (tokens 90298:970, 90298:971) | Gradient ↓ #FFFFFF → #EAEBF5 (tokens 90298:980, 90298:981) | Solid #F0F1F8 (token 90298:991) | Solid #F7F7FB (token 90298:999) |
+| Success | Gradient ↓ #11B670 → #0F935B (tokens 90298:1036, 90298:1037) | Gradient ↓ #13C177 → #0F9A5F (tokens 90298:1048, 90298:1049) | Solid #0F935B (token 90298:1053) | Solid #67CCA1 (token 90298:1057) |
+| Negative | Gradient ↓ #FF4657 → #E23041 (tokens 90298:1011, 90298:1012) | Gradient ↓ #FC5060 → #D30B1E (tokens 90298:1020, 90298:1021) | Solid #D30B1E (token 90298:1025) | Solid #FFB1B8 (token 90298:1029) |
+| Warning | Gradient ↓ #F5973A → #DB852F (tokens 90298:1065, 90298:1066) | Gradient ↓ #F5973A → #CF7D2B (tokens 90298:1067, 90298:1068) | Solid #CF7D2B (token 90298:1069) | Solid #EEBB8B (token 90298:1071) |
+| Outline Blue | Solid #F0F1FF (token 90298:1110) | Solid #E5E8FF (token 90298:1112) | Solid #E5E8FF (token 90298:1112) | #F0F1FF opacity 0.6 (token 90298:1111) |
+| Outline Green | Solid #E9FBF4 (token 90298:1114) | Solid #DCF7EB (token 90298:1115) | Solid #DCF7EB (token 90298:1115) | #E9FBF4 opacity 0.6 (token 90298:1117) |
+| Outline Red | Solid #FFF2F3 (token 90298:1118) | Solid #FFE8EA (token 90298:1119) | Solid #FFE8EA (token 90298:1119) | #FFF2F3 opacity 0.5 (token 90298:1121) |
+| Outline Orange | Solid #FFF9ED (token 90298:1124) | Solid #FEF2DA (token 90298:1125) | Solid #FEF2DA (token 90298:1126) | #FFF9ED opacity 0.6 (token 90298:1127) |
+| Ghost Blue | Transparent | Solid #EEEFFF (token 90298:1122) | Solid #EEEFFF (token 90298:1122) | Transparent, opacity 0.6 |
+| Ghost Red | Transparent | Solid #FFE8EA (token 90298:1123) | Solid #FFE8EA (token 90298:1123) | Transparent, opacity 0.6 |
+| Zia (Filled) | Gradient → #1471D9 → #E21565 (tokens 90298:1357, 90298:1358) | — | — | — |
+| Zia (Outline) | Gradient #EEF7FF → #FFEFF5 (tokens 90298:1361, 90298:1362) | — | — | — |
+
+#### Container Border Colors
+
+| Variant | Default | Hover | Click | Disabled |
+|---|---|---|---|---|
+| Primary | None (0px) | None | None | None |
+| Default | 1px #D5D8E9 (token 90298:975) | 1px #D5D8E9 (token 90298:983) | 1px #D5D8E9 (token 90298:993) | 1px #D5D8E9 (token 90298:995) |
+| Success | None (0px) | None | None | None |
+| Negative | None (0px) | None | None | None |
+| Warning | None (0px) | None | None | None |
+| Outline Blue | 1px #5464F2 (token 90811:54) | 1px #5464F2 | 1px #5464F2 | 1px #5464F2 opacity 0.6 (token 90298:1224) |
+| Outline Green | 1px #19B171 (token 90298:1229) | 1px #19B171 | 1px #19B171 | 1px #19B171 opacity 0.6 (token 90298:1231) |
+| Outline Red | 1px #FF4D5B (token 90298:1233) | 1px #FF4D5B | 1px #FF4D5B | 1px #FF4D5B opacity 0.5 (token 90298:1235) |
+| Outline Orange | 1px #E28C27 (token 90298:1236) | 1px #E28C27 (token 90298:1237) | 1px #E28C27 (token 90298:1238) | 1px #E28C27 opacity 0.6 (token 90298:1239) |
+| Ghost Blue | None (0px) | None | None | None |
+| Ghost Red | None (0px) | None | None | None |
+| Zia (Outline) | 1px Gradient #99CAF → #FFC9DD (tokens 90298:1369, 90298:1370) | — | — | — |
+
+### Label Text Layer
+
+| Property | Value |
+|---|---|
+| Font Family | Zoho Puvi |
+| Font Weight | Medium (500) |
+| Font Size | 14px (Default), 13px (Small), 11px (Extreme Small) |
+| Line Height | AUTO |
+| Letter Spacing | 0px |
+| Alignment | Center (horizontal and vertical) |
+
+#### Label Text Colors
+
+| Variant | Color | Token |
+|---|---|---|
+| Primary | #FFFFFF (White) | 84420:4367 |
+| Default | #313949 (Dark charcoal) | 90298:104 |
+| Success | #FFFFFF (White) | 84420:4367 |
+| Negative | #FFFFFF (White) | 84420:4367 |
+| Warning | #FFFFFF (White) | 84420:4367 |
+| Outline Blue | #5464F2 (Blue) | 90811:54 |
+| Outline Green | #19B171 (Green) | 90298:1229 |
+| Outline Red | #FF4D5B (Red) | 90298:1233 |
+| Outline Orange | #E28C27 (Orange) | 90298:1236 |
+| Ghost Blue | #5464F2 (Blue) | Same as Outline Blue |
+| Ghost Red | #FF4D5B (Red) | Same as Outline Red |
+| Zia (Filled) | #FFFFFF (White) | 84420:4367 |
+| Link (Default) | #616E88 (Muted blue-gray) | 90298:1286 |
+| Link (Primary) | #5464F2 (Blue) | 90811:54 |
+| Link (Red) | #FF4D5B (Red) | 90298:1233 |
+
+### Leading Icon Layer (Optional)
+
+| Property | Value |
+|---|---|
+| Size | 16×16px (Default), 14×14px (Small), 12×12px (Extreme Small) |
+| Position | Left of label |
+| Spacing from label | 3px (itemSpacing) |
+| Color | Inherits label color (see Label Text Colors above) |
+
+### Trailing Element / Dropdown Chevron (Optional)
+
+| Property | Value |
+|---|---|
+| Size | 10×8px chevron (Default), 8×6px (Small) |
+| Position | Right of label |
+| Spacing from label | 3px |
+| Color | Inherits label color |
+| Transform | Rotates 180° when dropdown is open |
+
+### Loader Layer (Loading State)
+
+| Property | Value |
+|---|---|
+| Size | 16×16px (Default), 14×14px (Small) |
+| Position | Center (replaces label + icons) |
+| Animation | Continuous rotation |
+
+#### Loader Colors per Variant
+
+| Variant | Spinner Color | Background During Loading |
+|---|---|---|
+| Primary | #FFFFFF (White) | Solid #1344A9 (token 90298:962) |
+| Default | #313949 (Dark) | Solid #F0F1F8 (token 90298:991) + border #D5D8E9 |
+| Success | #FFFFFF (White) | Solid #0F935B (token 90298:1053) |
+| Negative | #FFFFFF (White) | Solid #D30B1E (token 90298:1025) |
+| Warning | #FFFFFF (White) | Solid #CF7D2B (token 90298:1069) |
+| Outline Blue | #5464F2 (Blue) | Solid #E5E8FF + border #5464F2 |
+| Outline Green | #19B171 (Green) | Solid #DCF7EB + border #19B171 |
+| Outline Red | #FF4D5B (Red) | Solid #FFE8EA + border #FF4D5B |
+| Ghost Blue | #5464F2 (Blue) | Solid #EEEFFF (token 90298:1122) |
+| Ghost Red | #FF4D5B (Red) | Solid #FFE8EA (token 90298:1123) |
+
+### Focus Ring Layer (Keyboard Focus)
+
+| Property | Value |
+|---|---|
+| Type | Outer border/shadow |
+| Offset | 2px from container edge |
+| Width | 2px |
+| Color | #5464F2 (Blue, token 90811:54) |
+| Corner Radius | Container radius + 2px |
+| Visibility | Only on :focus-visible (keyboard), never on mouse |
+
+### Spacing & Padding
+
+| Property | Default (32px) | Small (27px) | Extreme Small (19px) |
+|---|---|---|---|
+| Padding Left | 14px | 12px | 10px |
+| Padding Right | 12px (with chevron) / 14px (without) | 10px | 10px |
+| Padding Top | 8px | 6px | 3px |
+| Padding Bottom | 8px | 6px | 3px |
+| Item Spacing | 3px (text+icon) / 10px (loader) | 3px | 10px |
+
+### Auto Layout
+
+| Property | Value |
+|---|---|
+| Direction | Horizontal |
+| Primary Axis Align | CENTER |
+| Counter Axis Align | CENTER |
+| Width Sizing | Hug Contents |
+| Height Sizing | Fixed (32/27/19px) |
+
+---
+
+## Variants
+
+| Variant | Example Label | Usage | Fill Type | Border |
+|---|---|---|---|---|
+| Primary | Create | High emphasis. For major actions. | Gradient (blue) | None |
+| Default | Cancel | Secondary / neutral actions. | Gradient (white→gray) | 1px solid |
+| Success | Accept | Confirmations, positive outcomes. | Gradient (green) | None |
+| Negative | Delete | Destructive or irreversible actions. | Gradient (red) | None |
+| Warning | Maybe | Caution / secondary actions. | Gradient (orange) | None |
+| Outline Blue | Reinvite | Medium emphasis, clear bounds. | Solid tinted | 1px solid blue |
+| Outline Green | Accept | Positive confirmation actions. | Solid tinted | 1px solid green |
+| Outline Red | Delete | Outlined destructive actions. | Solid tinted | 1px solid red |
+| Outline Orange | Maybe | Outlined warning actions. | Solid tinted | 1px solid orange |
+| Ghost Blue | Assign | Low emphasis, quiet context actions. | Transparent/tinted | None |
+| Ghost Red | Delete | Low emphasis destructive actions. | Transparent/tinted | None |
+| Zia Fill | Generate | Primary AI-powered action. | Gradient (blue→pink) | None |
+| Zia Outline | Reinvite | Secondary AI action. | Gradient tinted | 1px gradient |
+
+---
+
+## Sizes
+
+| Size | Height | Padding (H/V) | Font Size | Corner Radius | Icon Size |
+|---|---|---|---|---|---|
+| Extreme Small | 19px | 10px / 3px | 11px | 4px | 12×12px |
+| Small | 27px | 12px / 6px | 13px | 4px | 14×14px |
+| Default | 32px | 14px / 8px | 14px | 6px | 16×16px |
+
+---
+
+## States
+
+### Primary Button States
+
+| State | Fill | Text | Description |
+|---|---|---|---|
+| Default | Gradient ↑ #124DC3 → #5767F6 | #FFFFFF | Resting state with full gradient fill |
+| Hover | Gradient ↑ #0E3B98 → #3E4DEC | #FFFFFF | Darkened gradient on mouse over |
+| Click/Hold | Solid #1344A9 | #FFFFFF | Pressed state, single solid color |
+| Disable | Solid #ADB3EE | #FFFFFF | Lightened fill, non-interactive |
+| Loader | Solid #1344A9 + white spinner | Hidden | Spinner replaces label |
+
+### Default Button States
+
+| State | Fill | Border | Text |
+|---|---|---|---|
+| Default | Gradient ↓ #FFFFFF → #F1F0F7 | 1px #D5D8E9 | #313949 |
+| Hover | Gradient ↓ #FFFFFF → #EAEBF5 | 1px #D5D8E9 | #313949 |
+| Click/Hold | Solid #F0F1F8 | 1px #D5D8E9 | #313949 |
+| Disable | Solid #F7F7FB | 1px #D5D8E9 | Lightened |
+| Loader | Solid #F0F1F8 + dark spinner | 1px #D5D8E9 | Hidden |
+
+### Success Button States
+
+| State | Fill | Text |
+|---|---|---|
+| Default | Gradient ↓ #11B670 → #0F935B | #FFFFFF |
+| Hover | Gradient ↓ #13C177 → #0F9A5F | #FFFFFF |
+| Click/Hold | Solid #0F935B | #FFFFFF |
+| Disable | Solid #67CCA1 | #FFFFFF |
+| Loader | Solid #0F935B + white spinner | Hidden |
+
+### Negative Button States
+
+| State | Fill | Text |
+|---|---|---|
+| Default | Gradient ↓ #FF4657 → #E23041 | #FFFFFF |
+| Hover | Gradient ↓ #FC5060 → #D30B1E | #FFFFFF |
+| Click/Hold | Solid #D30B1E | #FFFFFF |
+| Disable | Solid #FFB1B8 | #FFFFFF |
+| Loader | Solid #D30B1E + white spinner | Hidden |
+
+### Outline Red Button States
+
+| State | Fill | Border | Text |
+|---|---|---|---|
+| Default | #FFF2F3 | 1px #FF4D5B | #FF4D5B |
+| Hover | #FFE8EA | 1px #FF4D5B | #FF4D5B |
+| Click/Hold | #FFE8EA | 1px #FF4D5B | #FF4D5B |
+| Disable | #FFF2F3 (0.5) | 1px #FF4D5B (0.5) | #FF4D5B (0.5) |
+| Loader | #FFE8EA + red spinner | 1px #FF4D5B | Hidden |
+
+### Ghost Red Button States
+
+| State | Fill | Border | Text |
+|---|---|---|---|
+| Default | Transparent | None | #FF4D5B |
+| Hover | #FFE8EA | None | #FF4D5B |
+| Click/Hold | #FFE8EA | None | #FF4D5B |
+| Disable | Transparent | None | #FF4D5B (0.6) |
+| Loader | #FFE8EA + red spinner | None | Hidden |
+
+### Orange / Warning Button States
+
+| State | Fill | Text |
+|---|---|---|
+| Default | Gradient ↓ #F5973A → #DB852F | #FFFFFF |
+| Hover | Gradient ↓ #F5973A → #CF7D2B | #FFFFFF |
+| Click/Hold | Solid #CF7D2B | #FFFFFF |
+| Disable | Solid #EEBB8B | #FFFFFF |
+| Loader | Solid #CF7D2B + white spinner | Hidden |
+
+### Outline Orange Small States
+
+| State | Fill | Border | Text |
+|---|---|---|---|
+| Default | #FFF9ED | 1px #E28C27 | #E28C27 |
+| Hover | #FEF2DA | 1px #E28C27 | #E28C27 |
+| Click/Hold | #FEF2DA | 1px #E28C27 | #E28C27 |
+| Disable | #FFF9ED (0.6) | 1px #E28C27 (0.6) | #E28C27 (0.6) |
+
+---
+
+## Color Variants
+
+| Color | Name | Usage | Primary Token IDs |
+|---|---|---|---|
+| Blue | Primary | Default primary actions | 90298:926, 90298:925 |
+| Green | Success | Positive confirmations | 90298:1036, 90298:1037 |
+| Red | Negative | Destructive / delete actions | 90298:1011, 90298:1012 |
+| Orange | Warning | Caution / secondary actions | 90298:1065, 90298:1066 |
+| Gray | Default | Neutral / cancel actions | 90298:970, 90298:971 |
+| Blue (Outline) | Outline Blue | Medium emphasis blue | 90298:1110, 90811:54 |
+| Green (Outline) | Outline Green | Medium emphasis green | 90298:1114, 90298:1229 |
+| Red (Outline) | Outline Red | Medium emphasis red | 90298:1118, 90298:1233 |
+| Orange (Outline) | Outline Orange | Medium emphasis orange | 90298:1124, 90298:1236 |
+| Blue→Pink | Zia | AI-powered actions | 90298:1357, 90298:1358 |
+
+---
+
+## Spacing & Measurements
+
+| Property | Default (32px) | Small (27px) | Extreme Small (19px) |
+|---|---|---|---|
+| Corner Radius | 6px | 4px | 4px |
+| Vertical Padding | 8px | 6px | 3px |
+| Horizontal Padding | 14px | 12px | 10px |
+| Height | 32px | 27px | 19px |
+| Font | Zoho Puvi, 14px, Medium | Zoho Puvi, 13px, Medium | Zoho Puvi, 11px, Medium |
+| Icon Gap | 3px | 3px | 10px |
+| Icon Size | 16×16px | 14×14px | 12×12px |
+
+---
+
+## Usage Guidelines
+
+### Do
+
+1. Maintain clear hierarchy - Use one Primary action per screen space. Accompany with Default or Ghost buttons for secondary actions.
+2. Use concise, active verbs - Label buttons with explicit CRM actions like "Create Lead", "Export CSV", or "Send Invite".
+3. Always pair Primary with Default - Every Primary Button should have a Default "escape" nearby (Cancel, Close, Back).
+4. Use Loading state for async - Always show Loading state during API calls, file uploads, and data processing.
+5. Size consistency in groups - All buttons in the same row must use the same size tier.
+6. Reference design tokens - Always use token IDs, never hardcode hex values.
+7. Destructive actions need confirmation - Negative buttons should trigger a confirmation dialog.
+
+### Don't
+
+1. Avoid multiple competing primary actions - Multiple primary buttons side-by-side causes action confusion.
+2. Avoid vague passive labels - Avoid "Click Here" or "Proceed". Use descriptive labels.
+3. Don't use Negative for Cancel - Cancel is Default variant. Negative is ONLY for destructive actions.
+4. Don't mix button sizes - Never combine 32px, 27px, and 19px in the same group.
+5. Don't create custom colors - Only use approved variant tokens.
+6. Don't use Extreme Small as primary CTA - 19px buttons for dense desktop UIs only.
+7. Don't remove focus indicators - Keyboard accessibility requires visible focus rings.
+
+---
+
+## Links
+
+### Primary Link
+
+| State | Color | Token | Decoration |
+|---|---|---|---|
+| Default | #5464F2 (Blue) | 90811:54 | No underline |
+| Hover | #5464F2 (Blue) | 90811:54 | Underlined |
+| Disabled | #616E88 (Muted) | 90298:1286 | No underline, opacity 0.6 |
+
+### Default Link (Underline)
+
+| State | Color | Token | Decoration |
+|---|---|---|---|
+| Default | #616E88 (Gray) | 90298:1286 | Underlined |
+| Hover | #5464F2 (Blue) | 90811:54 | Underlined |
+| Disabled | #616E88 (Muted) | 90298:1286 | Muted, opacity 0.6 |
+
+### Red Link
+
+| State | Color | Token | Decoration |
+|---|---|---|---|
+| Default | #FF4D5B (Red) | 90298:1233 | No underline |
+| Hover | #D30B1E (Darker red) | 90298:1025 | Underlined |
+| Disabled | #FFB1B8 (Muted pink) | 90298:1029 | No underline |
+
+---
+
+## Icon & Menu Buttons
+
+### Icon-Only (More)
+
+| Size | Dimensions | Fill | Border | Icon |
+|---|---|---|---|---|
+| Small More | 36×27px | Default gradient | 1px #D5D8E9 | 14×14px "..." |
+| Default More | 46×32px | Default gradient | 1px #D5D8E9 | 16×16px "..." |
+
+### More Button (Primary & Default)
+
+| Variant | Fill | Border | Text Color | Chevron |
+|---|---|---|---|---|
+| Primary More | Gradient #124DC3 → #5767F6 | None | #FFFFFF | White chevron |
+| Default More | Gradient #FFFFFF → #F1F0F7 | 1px #D5D8E9 | #313949 | Dark chevron |
+
+### Outline Blue More (Split Button)
+
+Split button: main action + dropdown separator + chevron section.
+
+---
+
+## Button Grouping Combinations
+
+| Pattern | Buttons | Usage |
+|---|---|---|
+| Accept / Reject | Success + Negative | Approval workflows |
+| Create / Cancel | Primary + Default | Record creation |
+| Save / Cancel | Primary + Default | Edit forms |
+| Save / Save & Close / Cancel | Primary + Primary + Default | Multi-action forms |
+| Save / Add & Reorder / Cancel | Primary + Outline Blue + Default | List management |
+| Reinstate / Deactivate | Outline Green + Outline Red | Status toggle |
+
+### Button Group Rules
+
+- Primary always on the RIGHT (LTR) or LEFT (RTL)
+- Default/Cancel provides the safe escape on the left
+- Never pair Primary + Negative in the same group
+- Maximum 3 buttons visible simultaneously
+- All buttons in a group must be same height
+
+---
+
+## Zia / AI Buttons
+
+| Variant | Fill | Border | Text | Tokens |
+|---|---|---|---|---|
+| Zia Fill | Gradient → #1471D9 → #E21565 | None | #FFFFFF | 90298:1357, 90298:1358 |
+| Zia Outline | Gradient #EEF7FF → #FFEFF5 | 1px Gradient #99CAF → #FFC9DD | Gradient | 90298:1361, 90298:1362, 90298:1369, 90298:1370 |
+
+---
+
+## Small Buttons & Button Loaders
+
+### Small Buttons (27px)
+
+| Label | Variant | Fill | Border | Text |
+|---|---|---|---|---|
+| Add | Primary Small | Gradient #124DC3 → #5767F6 | None | #FFFFFF |
+| Cancel | Default Small | Gradient #FFFFFF → #F1F0F7 | 1px #D5D8E9 | #313949 |
+| Delete | Negative Small | Gradient #FF4657 → #E23041 | None | #FFFFFF |
+| Accept | Success Small | Gradient #11B670 → #0F935B | None | #FFFFFF |
+| Reinvite | Outline Blue Small | Solid #F0F1FF | 1px #5464F2 | #5464F2 |
+| Reject | Outline Red Small | Solid #FFF2F3 | 1px #FF4D5B | #FF4D5B |
+| Assign | Ghost Blue Small | Solid #EEEFFF | None | #5464F2 |
+
+### Meeting Invitation Buttons
+
+| Label | Variant | Fill | Border | Action |
+|---|---|---|---|---|
+| Yes | Outline Green Small | #E9FBF4 | 1px #19B171 | Accept |
+| Maybe | Outline Orange Small | #FFF9ED | 1px #E28C27 | Tentative |
+| No | Outline Red Small | #FFF2F3 | 1px #FF4D5B | Decline |
+
+### Button Loaders (Default 32px)
+
+| Variant | Spinner | Background |
+|---|---|---|
+| Primary | White | #1344A9 |
+| Default | #313949 | #F0F1F8 + border #D5D8E9 |
+| Negative | White | #D30B1E |
+| Success | White | #0F935B |
+| Outline Blue | #5464F2 | #E5E8FF + border #5464F2 |
+| Outline Red | #FF4D5B | #FFE8EA + border #FF4D5B |
+| Ghost Blue | #5464F2 | #EEEFFF |
+
+### Button Loaders (Small 27px)
+
+| Variant | Spinner | Background |
+|---|---|---|
+| Primary Sm. | White | #1344A9 |
+| Default Sm. | #313949 | #F0F1F8 + border |
+| Negative Sm. | White | #D30B1E |
+| Outline Blue Sm. | #5464F2 | #E5E8FF + border |
+| Outline Green Sm. | #19B171 | #DCF7EB + border |
+| Outline Orange Sm. | #E28C27 | #FEF2DA + border |
+
+---
+
+## After Click States
+
+| Button | After Click Fill | Text |
+|---|---|---|
+| Yes (Accept) | Solid #0F935B | #FFFFFF + checkmark |
+| Maybe (Tentative) | Solid #CF7D2B | #FFFFFF + checkmark |
+| No (Decline) | Solid #D30B1E | #FFFFFF + checkmark |
+
+---
+
+## Keyboard Focus States
+
+| Button | Focus Ring Color | Width | Offset |
+|---|---|---|---|
+| All Buttons | #5464F2 (token 90811:54) | 2px | 2px outside |
+| Links | Underline appears | — | — |
+
+---
+
+## Warning Buttons
+
+| Variant | Size | States | Fill (Default) | Border |
+|---|---|---|---|---|
+| Warning Button | Small (27px) | Default, Hover, Click, Disable, Loader | Gradient #F5973A → #DB852F | None |
+| Outline Orange | Small (27px) | Default, Hover, Click, Disable | Solid #FFF9ED | 1px #E28C27 |
+
+---
+
+## Breadcrumb & Pagination
+
+### Breadcrumb
+
+Module > All Leads > John Smith
+
+| Part | Color | Token | Style |
+|---|---|---|---|
+| Parent links | #5464F2 (Blue) | 90811:54 | Clickable, underline on hover |
+| Separator (>) | #616E88 (Gray) | 90298:1286 | Non-interactive |
+| Current page | #313949 (Dark) | 90298:104 | Bold, non-clickable |
+
+### Pagination
+
+| Variant | Active Page | Inactive Page | Height |
+|---|---|---|---|
+| Fill | Blue solid #5464F2, white text | No fill, dark text | 29px |
+| Outline | Blue outline #5464F2, blue text | No fill, dark text | 29px |
+
+---
+
+## Gradient Direction Reference
+
+| Variant | Direction | CSS | Figma Transform |
+|---|---|---|---|
+| Primary | Bottom-to-top (↑) | linear-gradient(0deg) | [[0,-1,1],[1,0,-0.5]] |
+| Default | Top-to-bottom (↓) | linear-gradient(180deg) | [[0,1,0],[-1,0,0.5]] |
+| Success | Top-to-bottom (↓) | linear-gradient(180deg) | [[0,1,0],[-1,0,0.5]] |
+| Negative | Top-to-bottom (↓) | linear-gradient(180deg) | [[0,1,0],[-1,0,0.5]] |
+| Warning | Top-to-bottom (↓) | linear-gradient(180deg) | [[0,1,0],[-1,0,0.5]] |
+| Zia | Left-to-right (→) | linear-gradient(90deg) | [[1,0,0],[0,1,0]] |
+
+---
+
+## Complete Token Map
+
+### Primary: 90298:926 (#124DC3), 90298:925 (#5767F6), 90298:961 (#0E3B98), 90298:960 (#3E4DEC), 90298:962 (#1344A9), 90298:963 (#ADB3EE)
+### Default: 90298:970 (#FFFFFF), 90298:971 (#F1F0F7), 90298:980 (#FFFFFF), 90298:981 (#EAEBF5), 90298:991 (#F0F1F8), 90298:999 (#F7F7FB), 90298:975 (#D5D8E9)
+### Success: 90298:1036 (#11B670), 90298:1037 (#0F935B), 90298:1048 (#13C177), 90298:1049 (#0F9A5F), 90298:1053 (#0F935B), 90298:1057 (#67CCA1)
+### Negative: 90298:1011 (#FF4657), 90298:1012 (#E23041), 90298:1020 (#FC5060), 90298:1021 (#D30B1E), 90298:1025 (#D30B1E), 90298:1029 (#FFB1B8)
+### Warning: 90298:1065 (#F5973A), 90298:1066 (#DB852F), 90298:1067 (#F5973A), 90298:1068 (#CF7D2B), 90298:1069 (#CF7D2B), 90298:1071 (#EEBB8B)
+### Outline Blue: 90298:1110 (#F0F1FF), 90298:1112 (#E5E8FF), 90298:1111 (#F0F1FF), 90811:54 (#5464F2), 90298:1224 (#5464F2)
+### Outline Green: 90298:1114 (#E9FBF4), 90298:1115 (#DCF7EB), 90298:1117 (#E9FBF4), 90298:1229 (#19B171), 90298:1231 (#19B171)
+### Outline Red: 90298:1118 (#FFF2F3), 90298:1119 (#FFE8EA), 90298:1121 (#FFF2F3), 90298:1233 (#FF4D5B), 90298:1235 (#FF4D5B)
+### Outline Orange: 90298:1124 (#FFF9ED), 90298:1125 (#FEF2DA), 90298:1126 (#FEF2DA), 90298:1127 (#FFF9ED), 90298:1236-1239 (#E28C27)
+### Ghost: 90298:1122 (#EEEFFF), 90298:1123 (#FFE8EA)
+### Zia: 90298:1357 (#1471D9), 90298:1358 (#E21565), 90298:1361 (#EEF7FF), 90298:1362 (#FFEFF5), 90298:1369 (#99CAF), 90298:1370 (#FFC9DD)
+### Utility: 84420:4367 (#FFFFFF), 90298:104 (#313949), 90298:1286 (#616E88), 90816:0 (#FFFFFF menu), 90312:2011 (#CED0E1 menu border)</script>
+
+<script>
+/* ============================================================================
+   1. GENERIC MARKDOWN PARSER — knows nothing about buttons
+   ========================================================================== */
+function parseMD(src){
+  const lines = src.split(/\r?\n/);
+  const root = {title:'__root__', level:0, children:[], tables:[], lines:[]};
+  const stack = [root];
+  let i = 0;
+  while(i < lines.length){
+    const line = lines[i];
+    const h = /^(#{1,6})\s+(.*)$/.exec(line);
+    if(h){
+      const level = h[1].length;
+      while(stack.length > 1 && stack[stack.length-1].level >= level) stack.pop();
+      const node = {title:h[2].trim(), level, children:[], tables:[], lines:[]};
+      stack[stack.length-1].children.push(node);
+      stack.push(node);
+      i++; continue;
+    }
+    if(/^\s*\|/.test(line)){
+      const buf = [];
+      while(i < lines.length && /^\s*\|/.test(lines[i])) buf.push(lines[i++]);
+      const t = parseTable(buf);
+      if(t) stack[stack.length-1].tables.push(t);
+      continue;
+    }
+    stack[stack.length-1].lines.push(line);
+    i++;
+  }
+  return root;
+}
+function parseTable(buf){
+  const cells = s => s.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(c=>c.trim());
+  if(buf.length < 2) return null;
+  const headers = cells(buf[0]);
+  if(!/^[\s|:-]+$/.test(buf[1])) return null;
+  const rows = buf.slice(2).map(cells).filter(r=>r.length && r.some(c=>c));
+  return {headers, rows, obj: rows.map(r=>{const o={};headers.forEach((h,i)=>o[h]=r[i]??'');return o;})};
+}
+function walk(node, fn){ (node.children||[]).forEach(c=>{fn(c); walk(c,fn);}); }
+function section(root, title){ let hit=null; const want=norm(title); walk(root,n=>{ if(!hit && norm(n.title)===want) hit=n; }); return hit; }
+function table(root, title, idx){ const s=section(root,title); return s ? s.tables[idx||0] : null; }
+function norm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+
+/* ============================================================================
+   2. VALUE PARSERS — markdown cell text -> renderable style data
+   ========================================================================== */
+const WARN = [];
+function normHex(h){
+  let v = h.replace('#','');
+  if(v.length===3||v.length===4) v = v.split('').map(c=>c+c).join('').slice(0,6);
+  else if(v.length!==6 && v.length!==8){
+    const fixed = (v+'FFFFFF').slice(0,6);
+    const w = {raw:'#'+v.toUpperCase(), fixed:'#'+fixed.toUpperCase(), why:v.length+'-digit hex in the markdown, padded to 6'};
+    if(!WARN.some(x=>x.raw===w.raw)) WARN.push(w);
+    v = fixed;
+  }
+  return '#'+v.toUpperCase();
+}
+function hexes(s){ return (String(s).match(/#[0-9A-Fa-f]{3,8}\b/g)||[]).map(normHex); }
+function tokens(s){ return String(s).match(/\b\d{4,6}:\d+\b/g) || []; }
+function opacityOf(s){ const m=/opacity\s*([0-9]*\.?[0-9]+)/i.exec(s) || /\(\s*(0?\.[0-9]+)\s*\)/.exec(s); return m?parseFloat(m[1]):1; }
+function parseFill(str){
+  const s = String(str||'').trim();
+  if(!s || s==='—' || s==='-') return null;
+  const out = {raw:s, tokens:tokens(s), opacity:opacityOf(s)};
+  const hx = hexes(s);
+  if(/gradient/i.test(s) && hx.length>=2){
+    out.type='gradient'; out.colors=hx;
+    out.arrow = s.includes('↑')?'↑' : s.includes('↓')?'↓' : s.includes('→')?'→' : '↓';
+    out.angle = out.arrow==='↑' ? 0 : out.arrow==='→' ? 90 : 180;
+    out.css = 'linear-gradient('+out.angle+'deg, '+hx[0]+' 0%, '+hx[hx.length-1]+' 100%)';
+    return out;
+  }
+  if(hx.length){ out.type='solid'; out.colors=[hx[0]]; out.css=hx[0]; return out; }
+  out.type = /transparent/i.test(s) ? 'transparent' : 'none';
+  out.colors=[]; out.css='transparent';
+  return out;
+}
+function parseBorder(str){
+  const s = String(str||'').trim();
+  if(!s || s==='—' || s==='-' || /^none/i.test(s)) return {width:0, raw:s||'None', tokens:[], opacity:1};
+  const w = /(\d+(?:\.\d+)?)px/.exec(s), hx = hexes(s);
+  const width = w ? parseFloat(w[1]) : (hx.length?1:0);
+  if(!width || !hx.length) return {width:0, raw:s, tokens:tokens(s), opacity:1};
+  return {width, color:hx[0], colors:hx, gradient:/gradient/i.test(s), opacity:opacityOf(s), raw:s, tokens:tokens(s)};
+}
+function parseColor(str){ const hx=hexes(str); return {hex:hx[0]||null, opacity:opacityOf(str), raw:String(str||'')}; }
+function px(str, fb){ const m=/(-?\d+(?:\.\d+)?)\s*px/.exec(String(str||'')); return m?parseFloat(m[1]):fb; }
+function rgba(hex,a){
+  if(!hex) return 'transparent';
+  if(a>=1) return hex;
+  const n = parseInt(hex.slice(1,7),16);
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ============================================================================
+   3. COMPONENT MODEL — built entirely from the parsed tables
+   ========================================================================== */
+const MD_SRC = document.getElementById('md-Buttons').textContent;
+const DOC = parseMD(MD_SRC);
+const META = (function(){
+  const l = (DOC.children[0] && DOC.children[0].lines || []).join(' ');
+  const v = /Version:\s*(v[\d.]+)/i.exec(l), c = /Category:\s*([^>]+)/i.exec(l);
+  return {version:v?v[1]:'', category:c?c[1].trim():'', name:DOC.children[0]?DOC.children[0].title:'Component'};
+})();
+const ALIAS = {ziafilled:'ziafill'};
+const key = s => { const n=norm(s); return ALIAS[n]||n; };
+const PRETTY = {'Zia (Filled)':'Zia Fill','Zia (Outline)':'Zia Outline'};
+
+const T = {
+  bg:table(DOC,'Container Background Colors'), border:table(DOC,'Container Border Colors'),
+  label:table(DOC,'Label Text Colors'), loader:table(DOC,'Loader Colors per Variant'),
+  variants:table(DOC,'Variants'), sizes:table(DOC,'Sizes'), pad:table(DOC,'Spacing & Padding'),
+  focus:table(DOC,'Focus Ring Layer (Keyboard Focus)'), labelLyr:table(DOC,'Label Text Layer'),
+  groups:table(DOC,'Button Grouping Combinations'), gradDir:table(DOC,'Gradient Direction Reference'),
+  colorVar:table(DOC,'Color Variants'), container:table(DOC,'Container Layer')
+};
+function indexBy(t,col){ const m={}; if(t) t.obj.forEach(r=>{ m[key(r[col||t.headers[0]])] = r; }); return m; }
+const I = {
+  bg:indexBy(T.bg), border:indexBy(T.border), label:indexBy(T.label), loader:indexBy(T.loader),
+  variants:indexBy(T.variants), color:indexBy(T.colorVar,'Name')
+};
+const VARIANTS = (T.bg?T.bg.rows:[]).map(r=>({id:key(r[0]), raw:r[0], name:PRETTY[r[0]]||r[0]}));
+
+function padCell(rowLabel, col, fb){
+  if(!T.pad) return {main:fb, alt:fb, raw:''};
+  const r = T.pad.obj.find(o=>norm(o[T.pad.headers[0]])===norm(rowLabel));
+  if(!r) return {main:fb, alt:fb, raw:''};
+  const raw = r[col] || '';
+  const nums = String(raw).match(/(\d+(?:\.\d+)?)\s*px/g) || [];
+  return {main:px(nums[0],fb), alt:nums[1]?px(nums[1],fb):px(nums[0],fb), raw};
+}
+const SIZES = (T.sizes?T.sizes.rows:[]).map(r=>{
+  const o={}; T.sizes.headers.forEach((h,i)=>o[h]=r[i]);
+  const nm = o['Size'];
+  const col = (T.pad?T.pad.headers:[]).find(h=>norm(h).startsWith(norm(nm))) || (T.pad?T.pad.headers[1]:'');
+  const pl=padCell('Padding Left',col,14), pr=padCell('Padding Right',col,14);
+  const pt=padCell('Padding Top',col,8), pb=padCell('Padding Bottom',col,8), gp=padCell('Item Spacing',col,3);
+  return {
+    id:key(nm), name:nm, short:(nm==='Default'?'M':nm==='Small'?'S':'XS'),
+    height:px(o['Height'],32), font:px(o['Font Size'],14), radius:px(o['Corner Radius'],6), icon:px(o['Icon Size'],16),
+    padL:pl.main, padR_chev:pr.main, padR_plain:pr.alt, padT:pt.main, padB:pb.main,
+    gap:gp.main, gapLoader:gp.alt
+  };
+}).reverse();
+
+const STATES = [
+  {id:'default', name:'Default', col:'Default'},
+  {id:'hover',   name:'Hover',   col:'Hover'},
+  {id:'click',   name:'Pressed', col:'Click'},
+  {id:'disabled',name:'Disabled',col:'Disabled'},
+  {id:'loader',  name:'Loading', col:null},
+  {id:'focus',   name:'Focus',   col:'Default'}
+];
+const MATRIX_STATES = ['default','hover','click','disabled','loader'];
+
+const FOCUS = (function(){
+  const o={}; if(T.focus) T.focus.obj.forEach(r=>o[norm(r[T.focus.headers[0]])]=r[T.focus.headers[1]]);
+  return {width:px(o.width,2), offset:px(o.offset,2), color:hexes(o.color||'')[0]||'#5464F2'};
+})();
+const LABEL_FONT = (function(){
+  const o={}; if(T.labelLyr) T.labelLyr.obj.forEach(r=>o[norm(r[T.labelLyr.headers[0]])]=r[T.labelLyr.headers[1]]);
+  const w=/(\d{3})/.exec(o.fontweight||'500');
+  return {family:o.fontfamily||'Zoho Puvi', weight:w?w[1]:'500', lineHeight:o.lineheight||'AUTO', tracking:o.letterspacing||'0px'};
+})();
+
+function computeStyle(vid,sid,stateId,opts){
+  opts = opts||{};
+  const st = STATES.find(s=>s.id===stateId)||STATES[0];
+  const size = SIZES.find(s=>s.id===sid)||SIZES[0];
+  const bgRow=I.bg[vid]||{}, bdRow=I.border[vid]||{}, lbRow=I.label[vid]||{}, ldRow=I.loader[vid]||{};
+  const notes=[];
+  let fill, border;
+  const isLoader = stateId==='loader';
+
+  if(isLoader){
+    const raw = ldRow[T.loader?T.loader.headers[2]:''] || '';
+    fill = parseFill(raw);
+    const hx = hexes(raw);
+    border = hx.length>1 ? {width:1,color:hx[1],opacity:1,raw:'1px '+hx[1],tokens:[]} : parseBorder(bdRow['Default']||'None');
+    if(!fill){ fill = parseFill(bgRow['Click']) || parseFill(bgRow['Default']); notes.push('No loader row for this variant — using its pressed fill.'); }
+  } else {
+    const col = st.col;
+    fill = parseFill(bgRow[col]);
+    if(!fill){ fill = parseFill(bgRow['Default']); notes.push('“'+st.name+'” is “—” in the markdown — inheriting Default.'); }
+    const bdRaw = (bdRow[col]!==undefined && bdRow[col]!=='—') ? bdRow[col] : (bdRow['Default']||'None');
+    border = parseBorder(bdRaw);
+  }
+
+  const lc = parseColor(lbRow[T.label?T.label.headers[1]:'']||'');
+  const textColor = lc.hex || '#313949';
+  let textAlpha = 1;
+  if(stateId==='disabled' && fill.opacity>=1 && !/outline|ghost/.test(vid)) textAlpha = 0.5;
+
+  const containerOpacity = Math.min(fill.opacity, border.opacity==null?1:border.opacity);
+  const padR = opts.chevron ? size.padR_chev : size.padR_plain;
+
+  return {
+    variantId:vid, sizeId:sid, stateId,
+    height:size.height, radius:size.radius, font:size.font, iconSize:size.icon,
+    padL:size.padL, padR, padT:size.padT, padB:size.padB, gap:isLoader?size.gapLoader:size.gap,
+    fill, border, textColor, textAlpha, containerOpacity, isLoader,
+    spinner: hexes(ldRow[T.loader?T.loader.headers[1]:'']||'')[0] || textColor,
+    focus: stateId==='focus' ? FOCUS : null,
+    fontFamily:LABEL_FONT.family, fontWeight:LABEL_FONT.weight,
+    tokenIds: [...new Set([].concat(fill.tokens||[], border.tokens||[], tokens(lbRow[T.label?T.label.headers[2]:'']||'')))],
+    notes, size
+  };
+}
+
+/* ============================================================================
+   4. RENDERERS
+   ========================================================================== */
+const ICON_PLUS = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3.2v9.6M3.2 8h9.6"/></svg>';
+function chevronSVG(w,h){ return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 10 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1.6 2.6L5 6l3.4-3.4"/></svg>'; }
+function applyStyle(el,s){
+  el.style.height = s.height+'px';
+  el.style.padding = s.padT+'px '+s.padR+'px '+s.padB+'px '+s.padL+'px';
+  el.style.borderRadius = s.radius+'px';
+  el.style.fontSize = s.font+'px';
+  el.style.fontWeight = s.fontWeight;
+  el.style.gap = s.gap+'px';
+  el.style.background = s.fill.css;
+  el.style.backgroundOrigin = 'padding-box';
+  el.style.backgroundClip = 'border-box';
+  el.style.color = rgba(s.textColor, s.textAlpha);
+  el.style.opacity = s.containerOpacity;
+  if(s.border.width){
+    el.style.borderWidth = s.border.width+'px';
+    el.style.borderColor = rgba(s.border.color, s.border.opacity==null?1:s.border.opacity);
+    if(s.border.gradient){
+      el.style.borderColor = 'transparent';
+      el.style.backgroundImage = s.fill.css+', linear-gradient(90deg,'+s.border.colors.join(',')+')';
+      el.style.backgroundOrigin = 'border-box';
+      el.style.backgroundClip = 'padding-box, border-box';
+    }
+  } else { el.style.borderWidth='0px'; el.style.borderColor='transparent'; }
+  el.style.outline = s.focus ? s.focus.width+'px solid '+s.focus.color : 'none';
+  el.style.outlineOffset = s.focus ? s.focus.offset+'px' : '0';
+}
+function defaultLabel(vid){
+  const r = I.variants[vid];
+  const raw = r ? r[T.variants.headers[1]] : null;
+  return raw && raw!=='—' ? raw : 'Button';
+}
+function buildButton(vid,sid,stateId,opts){
+  opts = opts||{};
+  const s = computeStyle(vid,sid,stateId,opts);
+  const el = document.createElement('div');
+  el.className='btn'; el.dataset.state=stateId;
+  applyStyle(el,s);
+  if(s.isLoader){
+    const sp = document.createElement('span'); sp.className='spin';
+    sp.style.width=s.iconSize+'px'; sp.style.height=s.iconSize+'px';
+    sp.style.borderWidth=Math.max(1.5,s.iconSize/8)+'px'; sp.style.color=s.spinner;
+    el.appendChild(sp);
+  } else {
+    if(opts.icon){
+      const ic=document.createElement('span');
+      ic.style.cssText='display:block;width:'+s.iconSize+'px;height:'+s.iconSize+'px;flex:0 0 auto';
+      ic.innerHTML=ICON_PLUS; ic.firstChild.setAttribute('width',s.iconSize); ic.firstChild.setAttribute('height',s.iconSize);
+      el.appendChild(ic);
+    }
+    const t=document.createElement('span');
+    t.textContent = opts.label!=null ? opts.label : defaultLabel(vid);
+    el.appendChild(t);
+    if(vid==='ziaoutline'){
+      t.style.background='linear-gradient(90deg,#1471D9,#E21565)';
+      t.style.webkitBackgroundClip='text'; t.style.backgroundClip='text'; t.style.color='transparent';
+    }
+    if(opts.chevron){
+      const cw = sid==='default'?10:8, ch = sid==='default'?8:6;
+      const c=document.createElement('span'); c.style.cssText='display:flex;align-items:center;flex:0 0 auto';
+      c.innerHTML=chevronSVG(cw,ch); el.appendChild(c);
+    }
+  }
+  if(opts.interactive && stateId==='default'){
+    const set = st => applyStyle(el, computeStyle(vid,sid,st,opts));
+    el.addEventListener('mouseenter',()=>set('hover'));
+    el.addEventListener('mouseleave',()=>set('default'));
+    el.addEventListener('mousedown', ()=>set('click'));
+    el.addEventListener('mouseup',   ()=>set('hover'));
+  } else el.classList.add('no-int');
+  return el;
+}
+
+/* --- links, parsed from ## Links --- */
+const LINKS = (function(){
+  const s = section(DOC,'Links');
+  if(!s) return [];
+  return s.children.filter(c=>c.tables.length).map(c=>{
+    const h = c.tables[0].headers;
+    return {id:key(c.title), name:c.title, states:c.tables[0].obj.map(r=>({
+      state:r[h[0]], color:parseColor(r[h[1]]), token:r[h[2]], deco:r[h[3]]
+    }))};
+  });
+})();
+function buildLink(linkId, stateName){
+  const L = LINKS.find(l=>l.id===linkId)||LINKS[0];
+  if(!L) return document.createTextNode('');
+  const row = L.states.find(s=>norm(s.state)===norm(stateName)) || L.states[0];
+  const a = document.createElement('span');
+  a.className='lnk'; a.textContent = 'View all leads';
+  a.style.color = rgba(row.color.hex||'#5464F2', row.color.opacity);
+  a.style.textDecoration = /underlin/i.test(row.deco) ? 'underline' : 'none';
+  a.style.textUnderlineOffset='2px';
+  return a;
+}
+
+/* ============================================================================
+   5. APP
+   ========================================================================== */
+const S = {
+  component:'button',
+  variant: VARIANTS.length?VARIANTS[0].id:'',
+  size: SIZES.length?SIZES[0].id:'',
+  state:'default', mode:'all', tab:'design',
+  label:null, icon:false, chevron:false, dark:false, filter:''
+};
+const $ = id => document.getElementById(id);
+
+const COMPONENTS = [
+  {id:'button', name:'Button',        live:true,  ico:'<path d="M4 5l7 14 2-6 6-2z"/>'},
+  {id:'link',   name:'Link',          live:true,  ico:'<path d="M9.5 14.5l5-5M7 12l-2 2a3.5 3.5 0 105 5l2-2M17 12l2-2a3.5 3.5 0 10-5-5l-2 2"/>'},
+  {id:'field',  name:'Text Field',    live:false, ico:'<path d="M4 7h16M4 12h10M4 17h16"/>'},
+  {id:'radio',  name:'Radio Button',  live:false, ico:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/>'},
+  {id:'check',  name:'Checkbox',      live:false, ico:'<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.4 12.2l2.5 2.5 4.7-5"/>'},
+  {id:'popup',  name:'Popup',         live:false, ico:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 9.5h18"/>'},
+  {id:'toggle', name:'Toggle Switch', live:false, ico:'<rect x="2.5" y="7.5" width="19" height="9" rx="4.5"/><circle cx="16.5" cy="12" r="2.6" fill="currentColor" stroke="none"/>'},
+  {id:'select', name:'Dropdown Select',live:false,ico:'<path d="M6 9l6 7 6-7"/>'}
+];
+const MODES = {
+  button:[['all','All variants'],['single','Preview'],['sizes','Sizes'],['groups','Groups']],
+  link:  [['all','All variants'],['single','Preview']]
+};
+function icoSVG(p){ return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>'; }
+
+function renderNav(){
+  const box = $('navList'); box.innerHTML='';
+  const f = norm(S.filter);
+  COMPONENTS.filter(c=>!f || norm(c.name).includes(f)).forEach(c=>{
+    const d = document.createElement('div');
+    d.className = 'nav-item'+(c.live?'':' locked')+(S.component===c.id?' active':'');
+    d.innerHTML = '<span class="nav-ico">'+icoSVG(c.ico)+'</span><span>'+c.name+'</span>' +
+      (c.live ? (S.component===c.id?'<span class="nav-dot"></span>':'') : '<span class="nav-tag">.md</span>');
+    d.onclick = ()=>{
+      if(!c.live){ alert('Drop a '+c.name+'.md into the library and it plugs into this same panel — no code changes.'); return; }
+      S.component=c.id; S.mode='all'; S.state='default';
+      S.variant = c.id==='link' ? (LINKS[0]||{}).id : VARIANTS[0].id;
+      renderAll();
+    };
+    box.appendChild(d);
+  });
+  $('railFoot').innerHTML =
+    '<b>'+META.name+'.md</b> · '+META.version+'<br>'+META.category+'<br>'+
+    VARIANTS.length+' variants · '+SIZES.length+' sizes · '+MATRIX_STATES.length+' states'+
+    (WARN.length?'<br><span style="color:#B4791A">'+WARN.length+' malformed value auto-corrected</span>':'');
+}
+function renderCrumbs(){
+  const modeName = ((MODES[S.component]||MODES.button).find(m=>m[0]===S.mode)||['','' ])[1];
+  const comp = COMPONENTS.find(c=>c.id===S.component).name;
+  const chev = '<span class="sep"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>';
+  $('crumbs').innerHTML = '<span>Components</span>'+chev+'<span>'+comp+'</span>'+chev+'<span class="cur">'+modeName+'</span>';
+  $('artTitle').textContent = comp+' Artboard';
+}
+function renderModes(){
+  const seg=$('modeSeg'); seg.innerHTML='';
+  (MODES[S.component]||MODES.button).forEach(([id,name])=>{
+    const b=document.createElement('button'); b.textContent=name; b.className=S.mode===id?'on':'';
+    b.onclick=()=>{ S.mode=id; renderCrumbs(); renderModes(); renderCanvas(); };
+    seg.appendChild(b);
+  });
+}
+
+/* ---------- canvas ---------- */
+function renderCanvas(){
+  const art=$('artboard'); art.innerHTML=''; art.className='artboard'+(S.dark?' dark':'');
+  if(S.component==='link') return renderLinkCanvas(art);
+  if(S.mode==='all')    return renderMatrix(art);
+  if(S.mode==='single') return renderSingle(art);
+  if(S.mode==='sizes')  return renderSizes(art);
+  if(S.mode==='groups') return renderGroups(art);
+}
+function renderMatrix(art){
+  const mx=document.createElement('div'); mx.className='mx';
+  mx.style.gridTemplateColumns = 'max-content repeat('+MATRIX_STATES.length+', minmax(150px,1fr))';
+  mx.appendChild(document.createElement('div'));
+  MATRIX_STATES.forEach(sid=>{
+    const h=document.createElement('div'); h.className='mx-col';
+    h.textContent=(STATES.find(s=>s.id===sid)||{}).name; mx.appendChild(h);
+  });
+  VARIANTS.forEach((v,i)=>{
+    if(i){ const sep=document.createElement('div'); sep.className='mx-rowsep'; mx.appendChild(sep); }
+    const lb=document.createElement('div'); lb.className='mx-row-label'; lb.textContent=v.name; mx.appendChild(lb);
+    MATRIX_STATES.forEach(sid=>{
+      const c=document.createElement('div');
+      c.className='mx-cell'+(v.id===S.variant && sid===S.state?' on':'');
+      c.appendChild(buildButton(v.id,S.size,sid,{label:S.label,icon:S.icon,chevron:S.chevron,interactive:true}));
+      c.onclick=()=>{ S.variant=v.id; S.state=sid; renderAll(); };
+      mx.appendChild(c);
+    });
+  });
+  art.appendChild(mx);
+}
+function renderSingle(art){
+  const stage=document.createElement('div'); stage.className='stage';
+  const frame=document.createElement('div'); frame.className='frame';
+  const btn=buildButton(S.variant,S.size,S.state,{label:S.label,icon:S.icon,chevron:S.chevron,interactive:true});
+  frame.appendChild(btn);
+  frame.insertAdjacentHTML('beforeend','<div class="sel"><i class="handle tl"></i><i class="handle tr"></i><i class="handle bl"></i><i class="handle br"></i></div>');
+  const dim=document.createElement('div'); dim.className='dim'; frame.appendChild(dim);
+  stage.appendChild(frame); art.appendChild(stage);
+  requestAnimationFrame(()=>{ const r=btn.getBoundingClientRect(); dim.textContent=Math.round(r.width)+' × '+Math.round(r.height); });
+}
+function renderSizes(art){
+  const row=document.createElement('div'); row.className='size-row';
+  SIZES.forEach(sz=>{
+    const c=document.createElement('div'); c.className='size-card'+(sz.id===S.size?' on':'');
+    c.appendChild(buildButton(S.variant,sz.id,S.state,{label:S.label,icon:S.icon,chevron:S.chevron,interactive:true}));
+    c.insertAdjacentHTML('beforeend','<div class="size-meta"><b>'+sz.name+'</b><span>'+sz.height+'h · '+sz.font+'px · r'+sz.radius+'</span></div>');
+    c.onclick=()=>{ S.size=sz.id; renderAll(); };
+    row.appendChild(c);
+  });
+  art.appendChild(row);
+}
+function renderGroups(art){
+  const wrap=document.createElement('div'); wrap.className='stack';
+  const h = T.groups?T.groups.headers:[];
+  (T.groups?T.groups.obj:[]).forEach(r=>{
+    const row=document.createElement('div'); row.className='group-row';
+    row.innerHTML='<div class="group-head"><span class="group-title">'+r[h[0]]+'</span><span class="group-use">'+r[h[2]]+'</span></div>';
+    const bar=document.createElement('div'); bar.className='group-btns';
+    const parts=String(r[h[1]]).split('+').map(p=>p.trim());
+    // MD rule: "Primary always on the RIGHT (LTR)"
+    parts.slice().sort((a,b)=>(key(a)==='primary'?1:0)-(key(b)==='primary'?1:0)).forEach(p=>{
+      const vid=key(p); if(I.bg[vid]) bar.appendChild(buildButton(vid,S.size,'default',{interactive:true}));
+    });
+    row.appendChild(bar); wrap.appendChild(row);
+  });
+  art.appendChild(wrap);
+}
+function renderLinkCanvas(art){
+  if(S.mode==='single'){
+    const stage=document.createElement('div'); stage.className='stage';
+    stage.appendChild(buildLink(S.variant, S.state==='disabled'?'Disabled':S.state));
+    art.appendChild(stage); return;
+  }
+  const cols = (LINKS[0]||{states:[]}).states.map(s=>s.state);
+  const mx=document.createElement('div'); mx.className='mx';
+  mx.style.gridTemplateColumns='max-content repeat('+cols.length+', minmax(150px,1fr))';
+  mx.appendChild(document.createElement('div'));
+  cols.forEach(c=>{ const h=document.createElement('div'); h.className='mx-col'; h.textContent=c; mx.appendChild(h); });
+  LINKS.forEach((L,i)=>{
+    if(i){ const sep=document.createElement('div'); sep.className='mx-rowsep'; mx.appendChild(sep); }
+    const lb=document.createElement('div'); lb.className='mx-row-label'; lb.textContent=L.name; mx.appendChild(lb);
+    cols.forEach(c=>{
+      const cell=document.createElement('div');
+      cell.className='mx-cell'+(L.id===S.variant && norm(c)===norm(S.state)?' on':'');
+      cell.appendChild(buildLink(L.id,c));
+      cell.onclick=()=>{ S.variant=L.id; S.state=norm(c); renderAll(); };
+      mx.appendChild(cell);
+    });
+  });
+  art.appendChild(mx);
+}
+
+/* ---------- inspector ---------- */
+function grp(t, inner, right){
+  return '<div class="grp"><div class="grp-t"><span class="cap">'+t+'</span>'+(right||'')+'</div>'+inner+'</div>';
+}
+function swatchHTML(s){
+  if(s.fill.type==='gradient') return '<span class="sw grad" style="background:'+s.fill.css+'"></span>';
+  if(s.fill.type==='solid')    return '<span class="sw" style="background:'+s.fill.colors[0]+'"></span>';
+  return '<span class="sw" style="background:repeating-linear-gradient(45deg,#EEE,#EEE 3px,#FFF 3px,#FFF 6px)"></span>';
+}
+function renderInspector(){
+  const b=$('inspBody');
+  if(S.component==='link') return renderLinkInspector(b);
+  const v = VARIANTS.find(x=>x.id===S.variant)||VARIANTS[0];
+  const s = computeStyle(S.variant,S.size,S.state,{chevron:S.chevron});
+
+  if(S.tab==='design'){
+    const fillVal = s.fill.type==='gradient'
+      ? s.fill.colors[0]+' → '+s.fill.colors[1]
+      : s.fill.type==='solid' ? s.fill.colors[0] : 'transparent';
+    const rows = [
+      ['bg-'+S.state, fillVal, swatchHTML(s), true],
+      ['text-color', s.textColor, '<span class="sw" style="background:'+s.textColor+'"></span>', true],
+      ['border', s.border.width? s.border.width+'px '+s.border.color : 'none',
+        s.border.width?'<span class="sw" style="background:'+s.border.color+'"></span>':'', false],
+      ['border-radius', s.radius+'px','',false],
+      ['height', s.height+'px','',false],
+      ['padding-x', s.padL+'px / '+s.padR+'px','',false],
+      ['padding-y', s.padT+'px','',false],
+      ['item-spacing', s.gap+'px','',false],
+      ['font-size', s.font+'px','',false],
+      ['font-weight', s.fontWeight,'',false],
+      ['line-height', LABEL_FONT.lineHeight,'',false],
+      ['font-family', s.fontFamily,'',false],
+      ['icon-size', s.iconSize+'px','',false]
+    ];
+    const guide = guidanceFor(S.variant);
+    b.innerHTML =
+      grp('Variant Select','<div class="pills">'+VARIANTS.map(x=>'<span class="pill'+(x.id===S.variant?' on':'')+'" data-v="'+x.id+'">'+x.name+'</span>').join('')+'</div>') +
+      grp('Interactive State','<div class="radios">'+STATES.map(x=>'<span class="radio'+(x.id===S.state?' on':'')+'" data-s="'+x.id+'"><i></i>'+x.name+'</span>').join('')+'</div>') +
+      grp('Token Mapping','<div class="tokens">'+rows.map(r=>
+          '<div class="trow"><span class="tk">'+r[0]+'</span><span class="tv'+(r[3]?' hex':'')+'">'+r[2]+r[1]+'</span></div>').join('')+'</div>' +
+          (s.tokenIds.length?'<div class="tokchips">'+s.tokenIds.map(t=>'<span class="tok">'+t+'</span>').join('')+'</div>':''),
+        '<span class="link" id="lnkTokens">View source</span>') +
+      grp('Responsive Sizes','<div id="sizeStrip" class="size-row"></div>') +
+      grp('Content',
+        '<input class="field" id="inpLabel" placeholder="'+defaultLabel(S.variant)+'" value="'+(S.label==null?'':String(S.label).replace(/"/g,'&quot;'))+'">'+
+        '<div class="rowsw"><label>Leading icon</label><div class="tog'+(S.icon?' on':'')+'" id="togIcon"></div></div>'+
+        '<div class="rowsw"><label>Trailing chevron</label><div class="tog'+(S.chevron?' on':'')+'" id="togChev"></div></div>') +
+      grp('Guidelines','<div class="callout"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h11M4 18h7"/></svg><span>'+guide+'</span></div>') +
+      (s.notes.length ? grp('Parser Notes', s.notes.map(n=>'<div class="callout plain">'+n+'</div>').join('')) : '');
+
+    b.querySelectorAll('[data-v]').forEach(e=>e.onclick=()=>{S.variant=e.dataset.v;S.label=null;renderAll();});
+    b.querySelectorAll('[data-s]').forEach(e=>e.onclick=()=>{S.state=e.dataset.s;renderAll();});
+    $('inpLabel').oninput = e => { S.label = e.target.value===''?null:e.target.value; renderCanvas(); };
+    $('togIcon').onclick = ()=>{ S.icon=!S.icon; renderAll(); };
+    $('togChev').onclick = ()=>{ S.chevron=!S.chevron; renderAll(); };
+    $('lnkTokens').onclick = openSource;
+    const strip=$('sizeStrip');
+    SIZES.slice().reverse().forEach(sz=>{
+      const c=document.createElement('div'); c.className='size-card'+(sz.id===S.size?' on':'');
+      c.style.cssText='min-width:0;flex:1;padding:16px 10px 10px;gap:11px';
+      c.appendChild(buildButton(S.variant,sz.id,'default',{label:'Button'}));
+      c.insertAdjacentHTML('beforeend','<div class="size-meta"><b>'+sz.short+'</b><span>'+sz.height+'h</span></div>');
+      c.onclick=()=>{ S.size=sz.id; renderAll(); };
+      strip.appendChild(c);
+    });
+    return;
+  }
+
+  /* ---- Inspect tab ---- */
+  const sw = c => '<span class="sw" style="background:'+c+'"></span>';
+  const fillTxt = s.fill.type==='gradient'
+    ? swatchHTML(s)+s.fill.colors[0]+' → '+s.fill.colors[1]+' · '+s.fill.angle+'deg'
+    : s.fill.type==='solid' ? sw(s.fill.colors[0])+s.fill.colors[0] : 'transparent';
+  const vr = I.variants[S.variant], vh = T.variants?T.variants.headers:[];
+  const doNode=section(DOC,'Do'), dontNode=section(DOC,"Don't");
+  const numbered = n => (n?n.lines:[]).filter(l=>/^\s*\d+\.\s+/.test(l)).map(l=>l.replace(/^\s*\d+\.\s+/,''));
+  const li = arr => '<ul>'+arr.map(x=>{ const m=/^([^-–—]+?)\s+[-–—]\s+(.*)$/.exec(x); return '<li>'+(m?'<b>'+m[1]+'</b> — '+m[2]:x)+'</li>'; }).join('')+'</ul>';
+
+  b.innerHTML =
+    grp('Computed · '+v.name+' · '+(STATES.find(x=>x.id===S.state)||{}).name,
+      '<div class="kv"><span class="k">Fill</span><span class="v">'+fillTxt+'</span></div>'+
+      '<div class="kv"><span class="k">Border</span><span class="v">'+(s.border.width?sw(s.border.color)+s.border.width+'px '+s.border.color+(s.border.opacity<1?' @'+s.border.opacity:''):'none')+'</span></div>'+
+      '<div class="kv"><span class="k">Text</span><span class="v">'+sw(s.textColor)+s.textColor+(s.textAlpha<1?' @'+s.textAlpha:'')+'</span></div>'+
+      (s.isLoader?'<div class="kv"><span class="k">Spinner</span><span class="v">'+sw(s.spinner)+s.spinner+'</span></div>':'')+
+      (s.containerOpacity<1?'<div class="kv"><span class="k">Opacity</span><span class="v">'+s.containerOpacity+'</span></div>':'')+
+      '<div class="kv"><span class="k">Typography</span><span class="v">'+s.fontFamily+' '+s.fontWeight+' '+s.font+'px</span></div>'+
+      '<div class="kv"><span class="k">Focus ring</span><span class="v">'+FOCUS.width+'px '+FOCUS.color+' @'+FOCUS.offset+'px</span></div>') +
+    grp('Raw markdown values',
+      '<div class="kv"><span class="k">background</span><span class="v">'+esc(s.fill.raw)+'</span></div>'+
+      '<div class="kv"><span class="k">border</span><span class="v">'+esc(s.border.raw||'None')+'</span></div>') +
+    grp('Generated CSS','<pre class="code">'+cssFor(S.variant,S.size)+'</pre>','<button class="copy" id="copyIn">Copy</button>') +
+    (vr ? grp('Usage',
+      '<div class="kv"><span class="k">Emphasis</span><span class="v" style="font-family:var(--sans);font-size:12.2px">'+vr[vh[2]]+'</span></div>'+
+      '<div class="kv"><span class="k">Fill type</span><span class="v">'+vr[vh[3]]+'</span></div>'+
+      '<div class="kv"><span class="k">Border</span><span class="v">'+vr[vh[4]]+'</span></div>') : '') +
+    grp('Do','<div class="doc do">'+li(numbered(doNode))+'</div>') +
+    grp("Don't",'<div class="doc dont">'+li(numbered(dontNode))+'</div>') +
+    (WARN.length ? grp('MD lint', WARN.map(w=>'<div class="callout plain"><span><b>'+w.raw+'</b> → '+w.fixed+' · '+w.why+'</span></div>').join('')) : '');
+  const ci=$('copyIn'); if(ci) ci.onclick=copyCSS;
+}
+function guidanceFor(vid){
+  const vr = I.variants[vid];
+  const usage = vr ? vr[T.variants.headers[2]] : '';
+  const doNode = section(DOC,'Do');
+  const dos = (doNode?doNode.lines:[]).filter(l=>/^\s*\d+\.\s+/.test(l)).map(l=>l.replace(/^\s*\d+\.\s+/,''));
+  let extra = '';
+  if(vid==='primary')  extra = dos.find(d=>/hierarchy|Primary/i.test(d))||'';
+  if(vid==='negative') extra = dos.find(d=>/Destructive/i.test(d))||'';
+  if(/outline|ghost/.test(vid)) extra = dos.find(d=>/Always pair/i.test(d))||'';
+  return usage + (extra? ' ' + extra : '');
+}
+function renderLinkInspector(b){
+  const L = LINKS.find(l=>l.id===S.variant)||LINKS[0];
+  if(!L){ b.innerHTML='<div class="callout plain">No Links section found in the markdown.</div>'; return; }
+  b.innerHTML =
+    grp('Variant Select','<div class="pills">'+LINKS.map(l=>'<span class="pill'+(l.id===S.variant?' on':'')+'" data-lv="'+l.id+'">'+l.name+'</span>').join('')+'</div>') +
+    grp('Interactive State','<div class="radios">'+L.states.map(s=>'<span class="radio'+(norm(s.state)===S.state?' on':'')+'" data-ls="'+norm(s.state)+'"><i></i>'+s.state+'</span>').join('')+'</div>') +
+    grp('Token Mapping','<div class="tokens">'+L.states.map(s=>
+      '<div class="trow"><span class="tk">'+norm(s.state)+'</span><span class="tv hex"><span class="sw" style="background:'+(s.color.hex||'#000')+'"></span>'+(s.color.hex||'—')+'</span></div>'+
+      '<div class="trow"><span class="tk">'+norm(s.state)+'-decoration</span><span class="tv">'+s.deco+'</span></div>').join('')+'</div>'+
+      '<div class="tokchips">'+[...new Set(L.states.map(s=>s.token))].map(t=>'<span class="tok">'+t+'</span>').join('')+'</div>');
+  b.querySelectorAll('[data-lv]').forEach(e=>e.onclick=()=>{S.variant=e.dataset.lv;renderAll();});
+  b.querySelectorAll('[data-ls]').forEach(e=>e.onclick=()=>{S.state=e.dataset.ls;renderAll();});
+}
+
+/* ---------- CSS generation ---------- */
+function cssFor(vid,sid){
+  const v=VARIANTS.find(x=>x.id===vid);
+  const cls='.btn--'+vid;
+  const base=computeStyle(vid,sid,'default',{chevron:S.chevron});
+  const L=[]; const P=(k,val)=>L.push('  <span class="c-p">'+k+'</span>: <span class="c-v">'+val+'</span>;');
+  L.push('<span class="c-s">/* '+v.name+' · '+base.size.name+' · generated from '+META.name+'.md '+META.version+' */</span>');
+  L.push(cls+' {');
+  P('display','inline-flex'); P('align-items','center'); P('justify-content','center');
+  P('height',base.height+'px');
+  P('padding',base.padT+'px '+base.padR+'px '+base.padB+'px '+base.padL+'px');
+  P('gap',base.gap+'px'); P('border-radius',base.radius+'px');
+  P('border',base.border.width?base.border.width+'px solid '+base.border.color:'none');
+  P('background',base.fill.css);
+  P('color',rgba(base.textColor,base.textAlpha));
+  P('font',base.fontWeight+' '+base.font+'px/1 "'+base.fontFamily+'", sans-serif');
+  P('cursor','pointer');
+  L.push('}');
+  [['hover',':hover'],['click',':active'],['disabled','[disabled]']].forEach(([st,sel])=>{
+    const c=computeStyle(vid,sid,st,{chevron:S.chevron});
+    L.push(cls+sel+' {');
+    P('background',c.fill.css);
+    if(c.border.width) P('border-color',rgba(c.border.color,c.border.opacity==null?1:c.border.opacity));
+    if(c.textAlpha<1) P('color',rgba(c.textColor,c.textAlpha));
+    if(c.containerOpacity<1) P('opacity',c.containerOpacity);
+    L.push('}');
+  });
+  const ld=computeStyle(vid,sid,'loader',{});
+  L.push(cls+'.is-loading {');
+  P('background',ld.fill.css);
+  if(ld.border.width) P('border-color',ld.border.color);
+  P('color','transparent');
+  L.push('}');
+  L.push(cls+'.is-loading::after {');
+  P('content','""'); P('position','absolute');
+  P('width',ld.iconSize+'px'); P('height',ld.iconSize+'px');
+  P('border','2px solid '+ld.spinner); P('border-top-color','transparent');
+  P('border-radius','50%'); P('animation','spin .7s linear infinite');
+  L.push('}');
+  L.push(cls+':focus-visible {');
+  P('outline',FOCUS.width+'px solid '+FOCUS.color); P('outline-offset',FOCUS.offset+'px');
+  L.push('}');
+  return L.join('\n');
+}
+function plainCSS(){ return cssFor(S.variant,S.size).replace(/<[^>]+>/g,'').replace(/&amp;/g,'&'); }
+function copyCSS(){
+  navigator.clipboard.writeText(plainCSS()).then(()=>{
+    const b=$('btnCopyCss'); const t=b.textContent; b.textContent='Copied'; setTimeout(()=>b.textContent=t,1200);
+  });
+}
+function openSource(){ $('sheetPre').textContent=MD_SRC; $('sheetTitle').textContent=META.name+'.md'; $('modal').classList.add('on'); }
+
+/* ---------- events ---------- */
+$('tabs').querySelectorAll('button').forEach(t=>t.onclick=()=>{ S.tab=t.dataset.tab; renderAll(); });
+$('bgSeg').querySelectorAll('button').forEach(t=>t.onclick=()=>{
+  S.dark = t.dataset.bg==='dark';
+  $('bgSeg').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on'); renderCanvas();
+});
+$('btnCopyCss').onclick=copyCSS;
+$('btnSource').onclick=openSource;
+$('sheetClose').onclick=()=>$('modal').classList.remove('on');
+$('modal').onclick=e=>{ if(e.target===$('modal')) $('modal').classList.remove('on'); };
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') $('modal').classList.remove('on'); });
+$('findInput').oninput = e => { S.filter=e.target.value; renderNav(); };
+
+function renderAll(){
+  renderNav(); renderCrumbs(); renderModes(); renderCanvas();
+  $('tabs').querySelectorAll('button').forEach(t=>t.classList.toggle('on',t.dataset.tab===S.tab));
+  renderInspector();
+}
+renderAll();
+console.log('[Component Studio] parsed', VARIANTS.length,'variants,',SIZES.length,'sizes,',LINKS.length,'link styles; warnings:',WARN);
+</script>
+</body>
+</html>
