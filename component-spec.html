@@ -1,0 +1,2805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Component Spec</title>
+<style>
+:root{
+  --bg:#FBFBFC;
+  --panel:#FFFFFF;
+  --line:#E8E9EE;
+  --line-2:#F0F1F5;
+  --text:#14161C;
+  --text-2:#4B5162;
+  --muted:#8A90A0;
+  --accent:#5464F2;
+  --accent-bg:#EEF0FE;
+  --accent-line:#C9CFFB;
+  --mono:ui-monospace,SFMono-Regular,"SF Mono",Menlo,Consolas,monospace;
+  --sans:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:13px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+::-webkit-scrollbar{width:11px;height:11px}
+::-webkit-scrollbar-thumb{background:#D7D9E2;border-radius:9px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:#C2C5D2;background-clip:content-box;border:3px solid transparent}
+::-webkit-scrollbar-track{background:transparent}
+
+.app{height:100vh;display:flex;flex-direction:column}
+
+/* ---------------- top bar ---------------- */
+.topbar{
+  height:56px;flex:0 0 56px;display:flex;align-items:center;gap:16px;padding:0 18px;
+  background:var(--panel);border-bottom:1px solid var(--line);z-index:30;
+}
+.brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:15px;letter-spacing:-.015em}
+.logo{
+  width:27px;height:27px;display:block;object-fit:contain;flex:0 0 27px;
+  background:none;border:0;border-radius:0;box-shadow:none;
+}
+.divider{width:1px;height:22px;background:var(--line)}
+.crumbs{display:flex;align-items:center;gap:8px;color:var(--text-2);font-weight:520}
+.crumbs .sep{color:#C3C7D3;display:flex}
+.crumbs .cur{color:var(--accent);font-weight:640}
+.spacer{flex:1}
+.tbtn{height:31px;padding:0 12px;border:1px solid var(--line);background:var(--panel);border-radius:8px;color:var(--text-2);
+  cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:.14s;font-size:12.5px;font-weight:540}
+.tbtn:hover{background:#F7F8FA;border-color:#DCDEE7;color:var(--text)}
+.tbtn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.tbtn.primary:hover{background:#4351E8;border-color:#4351E8}
+
+.body{flex:1;display:flex;min-height:0}
+
+/* ---------------- library rail ---------------- */
+.rail{width:286px;flex:0 0 286px;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.rail-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 10px}
+.cap{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
+.icon-btn{width:22px;height:22px;border:0;background:transparent;color:var(--muted);cursor:pointer;display:grid;place-items:center;border-radius:6px}
+.icon-btn:hover{background:#F2F3F7;color:var(--text-2)}
+.search{position:relative;padding:0 14px 12px}
+.search svg{position:absolute;left:24px;top:9px;color:var(--muted)}
+.search input{width:100%;height:34px;border:1px solid var(--line);border-radius:9px;background:#FBFBFD;padding:0 10px 0 32px;outline:0;transition:.14s}
+.search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(84,100,242,.12);background:#fff}
+.rail-scroll{flex:1;overflow-y:auto;padding:0 10px 12px}
+.nav-item{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;cursor:pointer;color:var(--text-2);
+  transition:.12s;user-select:none;font-weight:540;font-size:13.5px;margin-bottom:2px}
+.nav-item:hover{background:#F7F8FA}
+.nav-item.active{background:var(--accent-bg);color:var(--accent);font-weight:640;box-shadow:inset 0 0 0 1px var(--accent-line)}
+.nav-item.locked{opacity:.55}
+.nav-ico{width:18px;height:18px;display:grid;place-items:center;flex:0 0 18px}
+.nav-dot{margin-left:auto;width:6px;height:6px;border-radius:50%;background:var(--accent)}
+.nav-tag{margin-left:auto;font-size:10px;font-family:var(--mono);color:var(--muted);background:#F4F5F8;border:1px solid var(--line);
+  border-radius:5px;padding:1px 5px}
+.rail-foot{border-top:1px solid var(--line);padding:12px 18px;color:var(--muted);font-size:11px;line-height:1.65}
+.rail-foot b{color:var(--text-2);font-weight:620}
+
+/* ---------------- canvas ---------------- */
+.canvas-wrap{flex:1;min-width:0;display:flex;flex-direction:column;background:var(--bg);overflow:auto}
+.canvas-inner{padding:26px 30px 60px;min-width:max-content}
+.art-head{display:flex;align-items:flex-start;gap:16px;margin-bottom:20px}
+.art-title{font-size:20px;font-weight:700;letter-spacing:-.02em}
+.art-sub{color:var(--muted);font-size:13px;margin-top:3px}
+.zoom{margin-left:auto;display:flex;gap:8px;align-items:center}
+.chip{height:29px;display:inline-flex;align-items:center;padding:0 11px;border:1px solid var(--line);border-radius:8px;
+  background:var(--panel);color:var(--text-2);font-size:12px;font-weight:540;white-space:nowrap}
+.seg{display:inline-flex;background:#EDEEF3;border-radius:9px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:0 12px;height:25px;border-radius:7px;cursor:pointer;color:var(--text-2);
+  font-size:12px;font-weight:560;transition:.14s;white-space:nowrap}
+.seg button:hover{color:var(--text)}
+.seg button.on{background:#fff;color:var(--text);box-shadow:0 1px 2px rgba(20,24,36,.14)}
+
+.artboard{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:26px 30px 30px;display:inline-block;min-width:100%}
+.artboard.dark{background:#181B23;border-color:#2A2F3C}
+.artboard.dark .mx-col,.artboard.dark .mx-row-label{color:#8A90A0}
+.artboard.dark .mx-row-label{color:#C9CDD8}
+
+/* matrix */
+.mx{display:grid;gap:0 16px;align-items:center}
+.mx-col{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+  text-align:center;padding:0 0 14px}
+.mx-row-label{font-size:13px;font-weight:640;color:var(--text);white-space:nowrap;padding-right:14px}
+.mx-cell{display:flex;align-items:center;justify-content:center;padding:12px 6px;border-radius:10px;
+  cursor:pointer;transition:background .18s,box-shadow .18s}
+.mx-cell:hover{background:linear-gradient(180deg,rgba(84,100,242,.055),rgba(84,100,242,.015))}
+.artboard.dark .mx-cell:hover{background:linear-gradient(180deg,rgba(132,144,255,.12),rgba(132,144,255,.03))}
+.mx-cell.on{background:transparent;box-shadow:inset 0 0 0 1.5px var(--accent),0 0 0 3px rgba(84,100,242,.10)}
+.mx-rowsep{grid-column:1/-1;height:1px;background:var(--line-2)}
+.artboard.dark .mx-rowsep{background:#262B36}
+
+/* single preview */
+.stage{display:flex;align-items:center;justify-content:center;min-height:360px}
+.frame{position:relative;display:inline-flex;flex-direction:column;align-items:center}
+.sel{position:absolute;inset:-1px;border:1px solid var(--accent);pointer-events:none}
+.handle{position:absolute;width:7px;height:7px;background:#fff;border:1px solid var(--accent);border-radius:1px}
+.handle.tl{left:-4px;top:-4px}.handle.tr{right:-4px;top:-4px}.handle.bl{left:-4px;bottom:-4px}.handle.br{right:-4px;bottom:-4px}
+.dim{position:absolute;left:50%;transform:translateX(-50%);bottom:-27px;background:var(--accent);color:#fff;font-size:11px;
+  font-weight:640;padding:2px 7px;border-radius:4px;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+/* groups + sizes */
+.stack{display:flex;flex-direction:column;gap:14px}
+.group-row{border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:13px;background:#FCFCFD}
+.group-head{display:flex;align-items:baseline;gap:10px}
+.group-title{font-weight:660}
+.group-use{font-size:11.5px;color:var(--muted)}
+.group-btns{display:flex;gap:8px;flex-wrap:wrap}
+.size-row{display:flex;gap:18px;flex-wrap:wrap}
+.size-card{border:1px solid var(--line);border-radius:12px;padding:22px 26px 14px;display:flex;flex-direction:column;
+  align-items:center;gap:14px;cursor:pointer;transition:.14s;background:#FCFCFD;min-width:170px;overflow:hidden;max-width:100%}
+.size-card > *{max-width:100%}
+.size-card:hover{border-color:#CFD3E6}
+.size-card.on{border-color:var(--accent);box-shadow:0 0 0 3px rgba(84,100,242,.11);background:#fff}
+.size-meta{text-align:center}
+.size-meta b{display:block;font-size:13px}
+.size-meta span{font-size:11px;color:var(--muted)}
+
+/* ---------------- inspector ---------------- */
+.insp{width:392px;flex:0 0 392px;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tabs{display:flex;border-bottom:1px solid var(--line);padding:0 24px}
+.tabs button{flex:1;border:0;background:transparent;padding:15px 0 13px;cursor:pointer;color:var(--muted);font-weight:600;
+  font-size:13.5px;border-bottom:2px solid transparent;margin-bottom:-1px;transition:.14s}
+.tabs button:hover{color:var(--text-2)}
+.tabs button.on{color:var(--accent);border-bottom-color:var(--accent)}
+.insp-scroll{flex:1;overflow-y:auto;padding:20px 24px 40px}
+.grp{margin-bottom:26px}
+.grp-t{display:flex;align-items:center;justify-content:space-between;margin-bottom:11px}
+.grp-t .link{color:var(--accent);font-size:11.5px;font-weight:600;cursor:pointer;text-transform:none;letter-spacing:0}
+.grp-t .link:hover{text-decoration:underline}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pill{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:6px 13px;cursor:pointer;color:var(--text-2);
+  font-size:12.5px;transition:.13s;font-weight:540;white-space:nowrap}
+.pill:hover{border-color:#CFD3E6;background:#FAFAFC}
+.pill.on{background:var(--accent-bg);border-color:var(--accent-line);color:var(--accent);font-weight:640}
+.radios{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px 8px}
+.radio{display:flex;align-items:center;gap:8px;cursor:pointer;color:var(--text-2);font-size:12.8px;user-select:none;white-space:nowrap}
+.radio i{width:15px;height:15px;border-radius:50%;border:1.5px solid #C8CBD6;flex:0 0 15px;display:grid;place-items:center;transition:.14s}
+.radio.on{color:var(--text);font-weight:560}
+.radio.on i{border-color:var(--accent);border-width:4.5px}
+.radio:hover i{border-color:#A9AEC0}
+.radio.on:hover i{border-color:var(--accent)}
+
+.tokens{border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.trow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;font-size:12.3px}
+.trow:nth-child(odd){background:#FAFAFC}
+.trow .tk{color:var(--text-2);font-family:var(--mono);font-size:11.5px}
+.trow .tv{font-weight:620;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:7px;text-align:right}
+.trow .tv.hex{color:var(--accent);font-family:var(--mono);font-size:11.5px}
+.sw{width:11px;height:11px;border-radius:3px;border:1px solid rgba(0,0,0,.14);flex:0 0 11px}
+.sw.grad{width:22px}
+.tokchips{margin-top:10px}
+.tok{display:inline-block;font-family:var(--mono);font-size:10.5px;background:#F6F7FA;border:1px solid var(--line);border-radius:5px;
+  padding:2px 6px;margin:0 5px 5px 0;color:var(--text-2)}
+
+.callout{background:#FFF8E6;border:1px solid #F3DFA5;border-radius:10px;padding:12px 13px;display:flex;gap:10px;
+  color:#8A6410;font-size:12.3px;font-style:italic;line-height:1.55}
+.callout svg{flex:0 0 16px;margin-top:1px;color:#C48A16}
+.callout.plain{font-style:normal}
+
+pre.code{margin:0;background:#14161C;color:#D7DBE8;border-radius:10px;padding:14px;font-family:var(--mono);font-size:10.8px;
+  line-height:1.65;overflow:auto;max-height:340px}
+.code .c-p{color:#93A3FF}.code .c-v{color:#7FE3B1}.code .c-s{color:#5C6479}
+.kv{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;padding:5px 0;font-size:12.3px}
+.kv .k{color:var(--muted);flex:0 0 auto}
+.kv .v{color:var(--text);text-align:right;font-family:var(--mono);font-size:11.3px;word-break:break-word;display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.doc ul{margin:0;padding-left:17px}
+.doc li{margin:6px 0;color:var(--text-2);font-size:12.4px}
+.doc li b{color:var(--text);font-weight:620}
+.do li::marker{color:#16A34A}.dont li::marker{color:#EF4444}
+.copy{border:1px solid var(--line);background:#FAFAFC;border-radius:6px;padding:3px 9px;cursor:pointer;font-size:10.5px;
+  color:var(--text-2);font-weight:660;letter-spacing:.04em;text-transform:uppercase}
+.copy:hover{background:#fff;color:var(--text)}
+.field{width:100%;height:34px;border:1px solid var(--line);border-radius:9px;background:#FBFBFD;padding:0 10px;outline:0;transition:.13s}
+.field:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(84,100,242,.12);background:#fff}
+.rowsw{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 0}
+.rowsw label{color:var(--text-2);font-size:12.8px}
+.tog{width:36px;height:21px;border-radius:20px;background:#DFE1EA;position:relative;cursor:pointer;transition:.16s;flex:0 0 36px}
+.tog::after{content:"";position:absolute;left:2px;top:2px;width:17px;height:17px;border-radius:50%;background:#fff;transition:.16s;box-shadow:0 1px 2px rgba(0,0,0,.22)}
+.tog.on{background:var(--accent)}.tog.on::after{transform:translateX(15px)}
+
+/* modal */
+.modal{position:fixed;inset:0;background:rgba(15,18,28,.44);display:none;z-index:80;backdrop-filter:blur(3px)}
+.modal.on{display:grid;place-items:center}
+.sheet{width:min(900px,92vw);height:min(80vh,780px);background:#fff;border-radius:14px;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 26px 70px -20px rgba(10,14,26,.5)}
+.sheet-head{height:52px;flex:0 0 52px;display:flex;align-items:center;gap:10px;padding:0 18px;border-bottom:1px solid var(--line)}
+.sheet-body{flex:1;overflow:auto;padding:18px;background:#FBFBFD}
+.sheet-body pre{margin:0;font-family:var(--mono);font-size:11.5px;line-height:1.62;color:var(--text-2);white-space:pre-wrap}
+
+
+/* ---- library ---- */
+
+
+
+
+
+
+
+
+
+/* ---- guide ---- */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* ---- stacked (vertical) artboard layout ---- */
+.vstack{display:flex;flex-direction:column;gap:26px;width:100%}
+.vgroup{display:flex;flex-direction:column}
+.vgroup-title{
+  font-size:13px;font-weight:660;color:var(--text);letter-spacing:-.012em;
+  padding:0 0 10px;border-bottom:1px solid var(--line);margin-bottom:2px;
+}
+.vrow{
+  display:grid;align-items:center;gap:20px;padding:13px 10px 13px 18px;
+  cursor:pointer;transition:background .18s cubic-bezier(.3,0,.2,1);margin:0 -10px;position:relative;
+}
+/* a thin marker on the left edge instead of flooding the whole row with colour */
+.vrow::before{
+  content:"";position:absolute;left:0;top:10px;bottom:10px;width:2px;border-radius:2px;
+  background:transparent;transition:background .18s, transform .18s;transform:scaleY(.4);
+}
+.vrow:hover::before{background:#D4D7E3;transform:scaleY(1)}
+.vrow.on::before{background:linear-gradient(180deg,#7C6BF5,var(--accent));transform:scaleY(1)}
+.vrow:hover{background:linear-gradient(90deg,rgba(84,100,242,.045),rgba(84,100,242,0) 45%)}
+.vrow.on{background:linear-gradient(90deg,rgba(84,100,242,.085),rgba(84,100,242,0) 60%)}
+.vrow + .vrow{border-top:1px solid var(--line-2)}
+.vrow-label{
+  font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--muted);white-space:nowrap;transition:color .18s;
+}
+.vrow:hover .vrow-label{color:var(--text-2)}
+.vrow.on .vrow-label{color:var(--accent)}
+/* the component itself carries the selection, like a canvas object */
+.vrow-cell{display:inline-flex;align-items:center;justify-self:start;min-width:0;max-width:100%;position:relative}
+.vrow-cell::after{
+  content:"";position:absolute;inset:-9px -11px;border-radius:10px;
+  border:1px solid transparent;transition:border-color .18s, box-shadow .18s;pointer-events:none;
+}
+.vrow:hover .vrow-cell::after{border-color:#DDE0EC}
+.vrow.on .vrow-cell::after{border-color:var(--accent);box-shadow:0 0 0 3px rgba(84,100,242,.11)}
+/* corner ticks, only when selected */
+.vrow-cell i.tick{
+  position:absolute;width:5px;height:5px;background:#fff;border:1px solid var(--accent);
+  border-radius:1px;opacity:0;transition:opacity .18s;pointer-events:none;
+}
+.vrow.on .vrow-cell i.tick{opacity:1}
+.vrow-cell i.t1{left:-13px;top:-11px}   .vrow-cell i.t2{right:-13px;top:-11px}
+.vrow-cell i.t3{left:-13px;bottom:-11px}.vrow-cell i.t4{right:-13px;bottom:-11px}
+.vrow-note{font-size:11.5px;color:var(--muted);line-height:1.55;max-width:340px}
+.artboard.dark .vrow:hover{background:#20242E}
+.artboard.dark .vgroup-title{color:#EDEFF5;border-bottom-color:#262B36}
+.artboard.dark .vrow + .vrow{border-top-color:#20242B}
+.seg button svg{display:block}
+
+
+/* ---- token / palette page ---- */
+.tokset{display:flex;flex-direction:column;gap:30px;width:100%}
+.tokgrp-title{font-size:13px;font-weight:660;letter-spacing:-.012em;padding-bottom:10px;
+  border-bottom:1px solid var(--line);margin-bottom:14px}
+.swgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(206px,1fr));gap:12px}
+.swcard{border:1px solid var(--line);border-radius:11px;overflow:hidden;background:#fff;cursor:pointer;transition:.15s}
+.swcard:hover{border-color:var(--accent-line);box-shadow:0 2px 10px -4px rgba(20,24,36,.22);transform:translateY(-1px)}
+.swbar{display:flex;height:46px}
+.swbar span{flex:1}
+.swmeta{padding:8px 10px 9px}
+.swname{font-size:11.8px;font-weight:600;color:var(--text);line-height:1.35}
+.swhex{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;display:flex;flex-wrap:wrap;gap:6px}
+.swnote{font-size:10.5px;color:var(--muted);margin-top:4px;line-height:1.45}
+.artboard.dark .swcard{background:#181D26;border-color:#242B37}
+.artboard.dark .swname{color:#EDF0F6}
+.artboard.dark .tokgrp-title{color:#EDF0F6;border-bottom-color:#262B36}
+
+/* rendered component */
+.btn{display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;
+  font-family:"Zoho Puvi","Inter",-apple-system,"Segoe UI",Roboto,sans-serif;white-space:nowrap;user-select:none;cursor:pointer;
+  overflow:hidden;position:relative;border-style:solid;transition:background .12s linear,border-color .12s linear}
+.btn.no-int{cursor:default}
+.btn[data-state="disabled"]{cursor:not-allowed}
+.spin{border-radius:50%;border-style:solid;border-color:currentColor;border-top-color:transparent!important;animation:sp .7s linear infinite;display:block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.lnk{font-family:"Zoho Puvi","Inter",-apple-system,sans-serif;font-size:14px;font-weight:500;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand"><img class="logo" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAAQW0lEQVR42u2debBcVRHGf3PvvCyQgAmbiBBEBGTRkAhBqlAgsghhKUFA1IIESxZFqNJCRFxKxKDixiYouyIGUAQjQikghh1FEGQrMIDsYYlgQuDN3Osfp5vXr3Nm5s6bOy9UcU/V1Hszb+695/TXp/vrPn3Oq03eYwFVW3EtqURQAVABULUKgAqAqlUAVABUrQKgAqBqFQAVAFWrAKgAqFoFwFui1UfxWTX307bc/Ryt/qzwvtT7PDidYc2CA0vluhzIShSC9kXvrf3JC16TFfj+mwKARF4NI0RtY4G3AROA8fK9QWAJ8DKwWAQTu1+zh8Gncr2/9yrSn5WBMdLXZdKfl4BXI9fUDYBvGgBUUzLzSoDNgA8CWwHvBd4JTJIBp2Y2vC4ALAIeAe4CbgP+DjxjQEwjoBZpTXnudGAbYCrwHmAtAWCMMUWZCP4l4AngQenHrcDd0lcLbM+ztNbjkmTqtGFr4OPArgJArYd7/xe4BbgcuFLA6AYINR9zgYOANXtUtIeBa4BLgRvayGBUAEiMxqTAfsBhwIfc9xrOJ3hHnDvnp6/EMbQXgHnAT4F7Cwy8Ls/+InCy6WsW6UusP7mz+d5S3AH8DPilmK2a8RV9B8AO/GPAV4FpTuiJ6VQeGVA7jbXCsOYHMQEXAt8BFrYZuJrEm8UEWiEW6U8tAlRmFE4/ewA4CbjAAd+XOKBmhL8RcAXwGxG+dXJ1I5Sm8RGp/K3VyzIOdeKpMTkNsdefAe4U7c6NUGKU93kjlIaZAZ36k5r+NM04/Ng2Ac4Hrge2dMpX6gxIjMbMAX4IrOoEbLWk7kzLY+JgHwOeFafbFGY0GVgH2AB4tzhM3CzwFFLvfx3wWbm31T7t7wzgz+L4tS0B/i02/Ulx/svkbxPEOa8HbAis78YSG68qyjLgeOAHbhb2DEBihHqq2HrtTOoEpe+XinD+ANwog11WAOg1gPcBM4FZwBZu8PZ5CsTzwMHyrLrzOzmwKfApGcdfhc08WaAvA8C7hMnNkj5NMn2xmm77dglwCPC/Ig66EwAq/FXE++8sA0xbPHwhcDZwsfwe4/S0iD49pUuBD4uG7yPCzZzpbBoTdQRwpnyvaZx51iHoi7Usct3awvAOFVDbKcUdwN7AU51AaAeAdn4ScJVw6EHRDK/1LwDfBc4S82IF3k0UaaNP68ymAl8Tp+8HbkE5Bvh+xBwlzgFnBftSM+asaQLKg4V8rOuYlZKQusQQu4jZbQlCOn7jOe0evhLwR5mGVviZGdglwL7yvdeMzcxGGKjkZlDqDJ+W59wjfZkUcXhNGfAyYIGZMbnrSz6CvuTGCQ9KcPYLCeQ+YBxzzWQC1gQ+KpbjFQNkRxZkI9uLgW1bCP914HBgf+BxwxAaI+HDLQbfNPY2BX4rwd7vI/Y+lfcnAV82mlhWUyZWM77nUOAACRoTxwQbwMbCFse1SkQmbXj+ScAeLYT/vGjbmUZLG33MIGbGvj4L7An8yAw0HyUQYkDMkwB0oTM12rcZwM9b0OXlTJDeYHfgDDOAmhH+M8BOkq8Z6LPgY0Co6btanjvT0EMbmO3szFHep/7UxUReDuwmTK7pEpNTRW53GNKwHAA6GyaJPZ/gzFFNHOxOQuW6jvpK1EDVsOtlsB+JgNCMgJD1EYSXJGe1j8gwcwoxU2bLi9YfJM72ZxLmv8OgaB3XAZKtXFHCJ0L5vi0MydLPmjOl/TJHOObzuNDPpaafavdXljjKfvbGDNDOThW7nhuerLbreOA8Y3bKXChJzZTtJpRX7ftLm5mQjeJMGJAg7wmhzJlb09gI+JtQ1BTIFQCNGs+S3H1uLkqBm4DZRsvKaGmEJnrqalfI2s2GTiCMtjn6h8hxC2dJavL5OWpZ0vEbz1FBTJU8Ru4cRQPYS9hHrYSOe7M2XdjWPsKbtxQbuljCed+fMmdCP8nDjZKSGOcC23XEGT8I1K1N/Jzx2omxsWcD/yzJ7luHfoikD7Zs8d0XgN9JZPtggbyK9QkAJ7i0SWIoKhK598OXqTI8A3xPFoR8yuIoYD6QaSpikiTMJjutWCYrW4+WoP0q/CniS3ZwDjWW+kZmwTGyGFNkGVCFenwEBJs+ObaPIKgPmyjKs5Yx6zrezYCH1AfsBXza2CtF7DKxV2lJwt9QqOPUSK7GO2Tt6DiJSwaAawuYjjeLT6gT1pcnSaDWdJblKeBGpaGznF3Wz8+ht3Vdrw1XygwYNIswmRNQ5hZANPL8qlDkRodMZlGKqubo2D5RVDW1F8p4UyeP3VTQ4yTfY4OuRLJ4NzKySoSY9n9LGEAstaH2/VXzPovkeb7SBQiNgiDM7RMICsBDwO1m5qlybwmsm0hue0pkFec6yW52YiCdhN+U+x/G8NUyC/QRwOYC0ExJAiYuE2lBOLEACHQxE+b2KVhTYV/lArNMMg1b1wWJ1AhE2w2tMngj0P79ZaY1jL1NgH9JauNpc81jAv5twI/d6pM6zOPk/XFOqJ1mQowd2Yi5bHaUG0qKW5cA2DoRzcMFP0i+hx7Nj95zRx+Cy6DniPDHGGesi+U/AY6MMJ9uzVGRmWAp6hfMPcswQxCqJ152ARnAFglhIRw3RRYD/3FCHInzVTa1gWMgCaGy4Xb5++smCm6KAAaA00QgaWRhpBtzVNQnNAX47R1371UBFzl5aj/XT4C3G4HpBc8JCGW0sYSVNd+phbQvi1GmdGoEBJw5KjoTYiBkEVN7OkP1orUS/EAutNMr9BoJYVnNA7DYUMFew/VBhtdU6oBWLxBUNTqAUIY5shG2/r6pZDXzEmZBzUT2fgZMTARp35aV4ID1QYMMlYHYaHCG5EWyDoNUc3RqAXM0Eop6sgNB46EDezTBHoClkb+N6fcOGRXsLREatrLYeAqAPdjFTOiGoiZiwh4199Trpglza5Zghtrap9cin48vCX21r/McDVON21ui7WaBdYB25qg2Ap+gs3GQsLzpGd/q8irDEuD8oLbXEuNsrW2aZAKwWo8AJIQyjvmG7lmtnQOc69IRRczRkW0cczc+IRGWspx5EAJRViywWsTXvpKYIMgKew3JjJaZHTyaUB9j0wxaZzNbZkJWYCaoOTqtJMesScKYH1xSYkpinchsWpRIGhqHzqqEAlXofSelCvURcWy5m+4DItSyZkIrx5wwVOGRMLS0uhZhIcgv/DxJKL/pNRZShV7XfKZjX5gQqs3sl5UNTCvB/nnqN19AqLmpOGBmwrl9mAlzTYCnycVBcbIXCBW3BCEnLMM2SsiFITmuiZG44h6NSAcjmr59SY7YO9F5hOoKXApcNXK2ccxFZkInx9yUbOd8wtap9QhVz/sTNnDs4vJg+szzSzK9ANu5Wa+f36FFpP8mlNHZjuwgVHFJSQGZNR2XyD0vdmaqbswRhGXLTqtg1hzl8tOyKr1+d3ktlc/GumdbQK8mlLLbcsNeWOBuzsQn4g9v0xrPBQzfDJERyrF3ZPjyYBlN1wN0Jvj9wwMjYEfWHFmfkLm0eCZ0cKx574X/kqTHy0pBbELYJpU7AnIn8KQ+/EqW3w8FoTa/HxuUVWCXAJ9g+HptK3ZU1BydBnye5WtW7VKnfZ+Z/iwhVGcspOAOlwIAHMTwch6V5XzrJK4TOmqjwVxs5uYF0gW9mqMDWH6nomVHRSmqgnA6YTPFIobXtjYYqrhumHsOAPfJjL+eHreemqzvqsac2iB0kFBL+obdXeLssXa4Dnyd/tXPDBoQYjPBmqNuHLMWFEwDTiHUNOlY/cbAhwnrzTNMerzX4jNV4CMJ+wSazp9cK7Q8rU3eY4GtWLhXBm0XyGuErUILSupcrKm27wf8OsIiFKhzCzpmXF8nE/YVvF/S75nk5+8irLy9arS0rMKztWVWTXRrIanEHVcDda0L0s6eR9h+0zB2KxVgphvHlfcZhIsdJbTmRUFIKH7gRrOAxpY1Lg0CLyXsHGoa+aaEqrht1NokLg1xAkOVCbm5cHNClZfdItoPc+QdM84xN5xP6GSOcmO2YvuCU6OZZQp/tgg/trR5vA3ItDBLhf2iULTtWX6TwbYMHaYxQH8rjO8B7hdG4rV5kLAvawqhdLEoOWhXBEyJwp8u/idxAKfCNk+05jGJ5GzmyuDtcp1ecA6hbMTW9ozGTMgjuSMfMa/I079U+OuLUox36ZaaBF5H+aA2cRpSExM0m+GHGunNxsgDdugzCA0DwgEtckdqjs5j+DkOK0r4UwinqbyT4QVYmgg8mrDwM8zRJ5GkWSrM4EsmoWUZwgTCrvR9TQ4p6RMINk7wuSMd+MEy5Vfqs4+KOXjtw1RCHdVGDK+mUCU9X8jDcvsrYvuEtbj1Zslhb8VQbaNS0zHCViAUweo1ZbMj6xMeENDtrFT/tLkk1W4ynD/pE1urGfOcSXb3MklrW+GrAt0sQSExv5m0SR+nhHLCK4zdtTw3A75JOAxjCxPy10ueET535I+oUS38AGHt+XCG6ousIyxL8LqovyZh78RFhKMcMif8usQBexOWfaOUucjZDfsRNkZbECy/nkk40muuBDkNl93sZs+Xp4tJxDHvb+5v9+Q2RRBniDmYaYDIGX4MTdG+JOY6Ffx4wmaWOyUeyUyG0wr/fpmVi9oFeJ0O66gZFnQuYQ9BqwMzIBR0nUcoyb4vAnbSga+3iiy9tu8mEfNEhhfU+lNbriFsOrzGRLs2+OrmsI51RBkPldS9H7sti7+FsEnvGXo4rMODkAPfELNDh4EPSj59vvx8kGLrq2sSjqvZTvzMPIk7ahHnOw34lQjDU1FfZfEIYe/zNYQNdEWOqxlDKKnclrB/YkdJrsXub4G4SLLISynhuJpYSD9Lso3rRQSft2AiT4gQHhWteFmEOJZQLaAHNm3AUKUeslaxu/iZ2DEAk2UB5kCXiLOC8TGCHtj0iPTreRP9TxAlmEKomV3fUdt2BzYtJSx/ntJNXqnbM+PqxgF9R2wgzg76g1e7pYW2SHcsobR7u8iALCCfFB+0bgsg7IF93cYKTSPQWkTwAH8iHKF2T8EcVUcn3CnV+xzh7LbtJbVq2UbDgGE3Y2gOvtUrc9cp2Ku1oHBWGy8i7HM4iVDnVCd+3ps98rJdf5pOyNYJ52a89wr4O4vw692mOEZCF21y6wbCJrhdxd4POuZjKxFqZjA2GZYy/PClhrGpdcmf0GIm+UOjviJB0YmEYwNSF780HIlo1R97Pp0NRBXYWyQAnC5+yMYk3XHbEg5utYhvKgm0PSX33kuq4r9CO49iqFi4m9TzKpJ334ewS3GtHuOA+8WJXyYBX8wUMtoA+BUgayY2krz3DMKe2PXEaa7s2JMeXfycOMa7GX508UgWRLw26tHFW4upskcXj3VOeylDRxc/QDjb4VbCZvVm2WsItZL/m2rSZioOiCAmEgqidG3UHt4du99IiwI8LfVtotBKe3j3a4SN4YuJn/L4pjy8u1UAkzi6Niha/lyHmVRzufuRNiuo2PH1r8irU1RuWU/pR/T0M3PoBVjkHzg0+9SXVschdPoHDn0/E2k0/4PGivgvGZ36s8L7Uv0PmQqACoCqVQBUAFStAqACoGoVABUAVasAqACoWgVABUDVKgDeGu3/s3olnDZnfJwAAAAASUVORK5CYII=" alt="Zoho CRM"><span>Component Spec</span></div>
+    <div class="divider"></div>
+    <div class="crumbs" id="crumbs"></div>
+    <div class="spacer"></div>
+    <button class="tbtn" id="btnSource">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
+      Markdown
+    </button>
+            <button class="tbtn" id="btnCopySpec">Copy spec</button>
+    <button class="tbtn primary" id="btnCopyCss">Copy CSS</button>
+  </header>
+
+  <div class="body">
+
+    <aside class="rail">
+      <div class="rail-head">
+        <span class="cap">Library</span>
+        <button class="icon-btn" title="Add a component .md">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8.5v7M8.5 12h7"/></svg>
+        </button>
+      </div>
+      <div class="search">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.6-3.6"/></svg>
+        <input id="findInput" placeholder="Find components...">
+      </div>
+      <div class="rail-scroll" id="navList"></div>
+      <div class="rail-foot" id="railFoot"></div>
+    </aside>
+
+    <section class="canvas-wrap">
+      <div class="canvas-inner">
+        <div class="art-head">
+          <div>
+            <div class="art-title" id="artTitle">Button Artboard</div>
+            <div class="art-sub" id="artSub"></div>
+          </div>
+          <div class="zoom">
+            <div class="seg" id="modeSeg"></div>
+            <div class="seg" id="layoutSeg" title="Artboard layout">
+              <button data-lay="grid" title="Side by side">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="3" y="5" width="5" height="14" rx="1.5"/><rect x="9.5" y="5" width="5" height="14" rx="1.5"/><rect x="16" y="5" width="5" height="14" rx="1.5"/></svg>
+              </button>
+              <button data-lay="stack" title="Stacked">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><rect x="4" y="3.5" width="16" height="5" rx="1.5"/><rect x="4" y="10" width="16" height="5" rx="1.5"/><rect x="4" y="16.5" width="16" height="5" rx="1.5"/></svg>
+              </button>
+            </div>
+            <div class="seg" id="bgSeg">
+              <button data-bg="light" class="on">Light</button>
+              <button data-bg="dark">Dark</button>
+            </div>
+            <span class="chip" id="zoomChip">Canvas: 100%</span>
+          </div>
+        </div>
+        <div class="artboard" id="artboard"></div>
+      </div>
+    </section>
+
+    <aside class="insp">
+      <div class="tabs" id="tabs">
+        <button data-tab="design" class="on">Design</button>
+        <button data-tab="inspect">Inspect</button>
+      </div>
+      <div class="insp-scroll" id="inspBody"></div>
+    </aside>
+
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="sheet">
+    <div class="sheet-head"><b id="sheetTitle">Buttons.md</b><div class="spacer"></div><button class="tbtn" id="sheetClose">Close</button></div>
+    <div class="sheet-body" id="sheetBody"><pre id="sheetPre"></pre></div>
+  </div>
+</div>
+
+
+<script type="text/plain" data-md="Buttons"># Buttons
+> Category: Components / Atoms > Version: v2.0.0
+
+Buttons allow users to take actions, and make choices, with a single tap. They communicate actions and are typically placed throughout your UI in places like dialogs, forms, toolbars, and cards.
+
+---
+
+## Anatomy
+
+The visual breakdown and structure of the standard CRM Button component, with full color token references per layer.
+
+### Container Layer
+
+| Part | Description |
+|---|---|
+| Type | Frame with Horizontal Auto Layout |
+| Corner Radius | 6px (Default), 4px (Small, Extreme Small) |
+| Border | 0px (filled/ghost buttons), 1px (outline/default buttons) |
+| Height | 32px (Default), 27px (Small), 19px (Extreme Small) |
+| Clip Content | Yes |
+
+#### Container Background Colors
+
+| Variant | Default | Hover | Click | Disabled |
+|---|---|---|---|---|
+| Primary | Gradient ↑ #124DC3 → #5767F6 (tokens 90298:926, 90298:925) | Gradient ↑ #0E3B98 → #3E4DEC (tokens 90298:961, 90298:960) | Solid #1344A9 (token 90298:962) | Solid #ADB3EE (token 90298:963) |
+| Default | Gradient ↓ #FFFFFF → #F1F0F7 (tokens 90298:970, 90298:971) | Gradient ↓ #FFFFFF → #EAEBF5 (tokens 90298:980, 90298:981) | Solid #F0F1F8 (token 90298:991) | Solid #F7F7FB (token 90298:999) |
+| Success | Gradient ↓ #11B670 → #0F935B (tokens 90298:1036, 90298:1037) | Gradient ↓ #13C177 → #0F9A5F (tokens 90298:1048, 90298:1049) | Solid #0F935B (token 90298:1053) | Solid #67CCA1 (token 90298:1057) |
+| Negative | Gradient ↓ #FF4657 → #E23041 (tokens 90298:1011, 90298:1012) | Gradient ↓ #FC5060 → #D30B1E (tokens 90298:1020, 90298:1021) | Solid #D30B1E (token 90298:1025) | Solid #FFB1B8 (token 90298:1029) |
+| Warning | Gradient ↓ #F5973A → #DB852F (tokens 90298:1065, 90298:1066) | Gradient ↓ #F5973A → #CF7D2B (tokens 90298:1067, 90298:1068) | Solid #CF7D2B (token 90298:1069) | Solid #EEBB8B (token 90298:1071) |
+| Outline Blue | Solid #F0F1FF (token 90298:1110) | Solid #E5E8FF (token 90298:1112) | Solid #E5E8FF (token 90298:1112) | #F0F1FF opacity 0.6 (token 90298:1111) |
+| Outline Green | Solid #E9FBF4 (token 90298:1114) | Solid #DCF7EB (token 90298:1115) | Solid #DCF7EB (token 90298:1115) | #E9FBF4 opacity 0.6 (token 90298:1117) |
+| Outline Red | Solid #FFF2F3 (token 90298:1118) | Solid #FFE8EA (token 90298:1119) | Solid #FFE8EA (token 90298:1119) | #FFF2F3 opacity 0.5 (token 90298:1121) |
+| Outline Orange | Solid #FFF9ED (token 90298:1124) | Solid #FEF2DA (token 90298:1125) | Solid #FEF2DA (token 90298:1126) | #FFF9ED opacity 0.6 (token 90298:1127) |
+| Ghost Blue | Transparent | Solid #EEEFFF (token 90298:1122) | Solid #EEEFFF (token 90298:1122) | Transparent, opacity 0.6 |
+| Ghost Red | Transparent | Solid #FFE8EA (token 90298:1123) | Solid #FFE8EA (token 90298:1123) | Transparent, opacity 0.6 |
+| Zia (Filled) | Gradient → #1471D9 → #E21565 (tokens 90298:1357, 90298:1358) | — | — | — |
+| Zia (Outline) | Gradient #EEF7FF → #FFEFF5 (tokens 90298:1361, 90298:1362) | — | — | — |
+
+#### Container Border Colors
+
+| Variant | Default | Hover | Click | Disabled |
+|---|---|---|---|---|
+| Primary | None (0px) | None | None | None |
+| Default | 1px #D5D8E9 (token 90298:975) | 1px #D5D8E9 (token 90298:983) | 1px #D5D8E9 (token 90298:993) | 1px #D5D8E9 (token 90298:995) |
+| Success | None (0px) | None | None | None |
+| Negative | None (0px) | None | None | None |
+| Warning | None (0px) | None | None | None |
+| Outline Blue | 1px #5464F2 (token 90811:54) | 1px #5464F2 | 1px #5464F2 | 1px #5464F2 opacity 0.6 (token 90298:1224) |
+| Outline Green | 1px #19B171 (token 90298:1229) | 1px #19B171 | 1px #19B171 | 1px #19B171 opacity 0.6 (token 90298:1231) |
+| Outline Red | 1px #FF4D5B (token 90298:1233) | 1px #FF4D5B | 1px #FF4D5B | 1px #FF4D5B opacity 0.5 (token 90298:1235) |
+| Outline Orange | 1px #E28C27 (token 90298:1236) | 1px #E28C27 (token 90298:1237) | 1px #E28C27 (token 90298:1238) | 1px #E28C27 opacity 0.6 (token 90298:1239) |
+| Ghost Blue | None (0px) | None | None | None |
+| Ghost Red | None (0px) | None | None | None |
+| Zia (Outline) | 1px Gradient #99CAF → #FFC9DD (tokens 90298:1369, 90298:1370) | — | — | — |
+
+### Label Text Layer
+
+| Property | Value |
+|---|---|
+| Font Family | Zoho Puvi |
+| Font Weight | Medium (500) |
+| Font Size | 14px (Default), 13px (Small), 11px (Extreme Small) |
+| Line Height | AUTO |
+| Letter Spacing | 0px |
+| Alignment | Center (horizontal and vertical) |
+
+#### Label Text Colors
+
+| Variant | Color | Token |
+|---|---|---|
+| Primary | #FFFFFF (White) | 84420:4367 |
+| Default | #313949 (Dark charcoal) | 90298:104 |
+| Success | #FFFFFF (White) | 84420:4367 |
+| Negative | #FFFFFF (White) | 84420:4367 |
+| Warning | #FFFFFF (White) | 84420:4367 |
+| Outline Blue | #5464F2 (Blue) | 90811:54 |
+| Outline Green | #19B171 (Green) | 90298:1229 |
+| Outline Red | #FF4D5B (Red) | 90298:1233 |
+| Outline Orange | #E28C27 (Orange) | 90298:1236 |
+| Ghost Blue | #5464F2 (Blue) | Same as Outline Blue |
+| Ghost Red | #FF4D5B (Red) | Same as Outline Red |
+| Zia (Filled) | #FFFFFF (White) | 84420:4367 |
+| Link (Default) | #616E88 (Muted blue-gray) | 90298:1286 |
+| Link (Primary) | #5464F2 (Blue) | 90811:54 |
+| Link (Red) | #FF4D5B (Red) | 90298:1233 |
+
+### Leading Icon Layer (Optional)
+
+| Property | Value |
+|---|---|
+| Size | 16×16px (Default), 14×14px (Small), 12×12px (Extreme Small) |
+| Position | Left of label |
+| Spacing from label | 3px (itemSpacing) |
+| Color | Inherits label color (see Label Text Colors above) |
+
+### Trailing Element / Dropdown Chevron (Optional)
+
+| Property | Value |
+|---|---|
+| Size | 10×8px chevron (Default), 8×6px (Small) |
+| Position | Right of label |
+| Spacing from label | 3px |
+| Color | Inherits label color |
+| Transform | Rotates 180° when dropdown is open |
+
+### Loader Layer (Loading State)
+
+| Property | Value |
+|---|---|
+| Size | 16×16px (Default), 14×14px (Small) |
+| Position | Center (replaces label + icons) |
+| Animation | Continuous rotation |
+
+#### Loader Colors per Variant
+
+| Variant | Spinner Color | Background During Loading |
+|---|---|---|
+| Primary | #FFFFFF (White) | Solid #1344A9 (token 90298:962) |
+| Default | #313949 (Dark) | Solid #F0F1F8 (token 90298:991) + border #D5D8E9 |
+| Success | #FFFFFF (White) | Solid #0F935B (token 90298:1053) |
+| Negative | #FFFFFF (White) | Solid #D30B1E (token 90298:1025) |
+| Warning | #FFFFFF (White) | Solid #CF7D2B (token 90298:1069) |
+| Outline Blue | #5464F2 (Blue) | Solid #E5E8FF + border #5464F2 |
+| Outline Green | #19B171 (Green) | Solid #DCF7EB + border #19B171 |
+| Outline Red | #FF4D5B (Red) | Solid #FFE8EA + border #FF4D5B |
+| Ghost Blue | #5464F2 (Blue) | Solid #EEEFFF (token 90298:1122) |
+| Ghost Red | #FF4D5B (Red) | Solid #FFE8EA (token 90298:1123) |
+
+### Focus Ring Layer (Keyboard Focus)
+
+| Property | Value |
+|---|---|
+| Type | Outer border/shadow |
+| Offset | 2px from container edge |
+| Width | 2px |
+| Color | #5464F2 (Blue, token 90811:54) |
+| Corner Radius | Container radius + 2px |
+| Visibility | Only on :focus-visible (keyboard), never on mouse |
+
+### Spacing & Padding
+
+| Property | Default (32px) | Small (27px) | Extreme Small (19px) |
+|---|---|---|---|
+| Padding Left | 14px | 12px | 10px |
+| Padding Right | 12px (with chevron) / 14px (without) | 10px | 10px |
+| Padding Top | 8px | 6px | 3px |
+| Padding Bottom | 8px | 6px | 3px |
+| Item Spacing | 3px (text+icon) / 10px (loader) | 3px | 10px |
+
+### Auto Layout
+
+| Property | Value |
+|---|---|
+| Direction | Horizontal |
+| Primary Axis Align | CENTER |
+| Counter Axis Align | CENTER |
+| Width Sizing | Hug Contents |
+| Height Sizing | Fixed (32/27/19px) |
+
+---
+
+## Variants
+
+| Variant | Example Label | Usage | Fill Type | Border |
+|---|---|---|---|---|
+| Primary | Create | High emphasis. For major actions. | Gradient (blue) | None |
+| Default | Cancel | Secondary / neutral actions. | Gradient (white→gray) | 1px solid |
+| Success | Accept | Confirmations, positive outcomes. | Gradient (green) | None |
+| Negative | Delete | Destructive or irreversible actions. | Gradient (red) | None |
+| Warning | Maybe | Caution / secondary actions. | Gradient (orange) | None |
+| Outline Blue | Reinvite | Medium emphasis, clear bounds. | Solid tinted | 1px solid blue |
+| Outline Green | Accept | Positive confirmation actions. | Solid tinted | 1px solid green |
+| Outline Red | Delete | Outlined destructive actions. | Solid tinted | 1px solid red |
+| Outline Orange | Maybe | Outlined warning actions. | Solid tinted | 1px solid orange |
+| Ghost Blue | Assign | Low emphasis, quiet context actions. | Transparent/tinted | None |
+| Ghost Red | Delete | Low emphasis destructive actions. | Transparent/tinted | None |
+| Zia Fill | Generate | Primary AI-powered action. | Gradient (blue→pink) | None |
+| Zia Outline | Reinvite | Secondary AI action. | Gradient tinted | 1px gradient |
+
+---
+
+## Sizes
+
+| Size | Height | Padding (H/V) | Font Size | Corner Radius | Icon Size |
+|---|---|---|---|---|---|
+| Extreme Small | 19px | 10px / 3px | 11px | 4px | 12×12px |
+| Small | 27px | 12px / 6px | 13px | 4px | 14×14px |
+| Default | 32px | 14px / 8px | 14px | 6px | 16×16px |
+
+---
+
+## States
+
+### Primary Button States
+
+| State | Fill | Text | Description |
+|---|---|---|---|
+| Default | Gradient ↑ #124DC3 → #5767F6 | #FFFFFF | Resting state with full gradient fill |
+| Hover | Gradient ↑ #0E3B98 → #3E4DEC | #FFFFFF | Darkened gradient on mouse over |
+| Click/Hold | Solid #1344A9 | #FFFFFF | Pressed state, single solid color |
+| Disable | Solid #ADB3EE | #FFFFFF | Lightened fill, non-interactive |
+| Loader | Solid #1344A9 + white spinner | Hidden | Spinner replaces label |
+
+### Default Button States
+
+| State | Fill | Border | Text |
+|---|---|---|---|
+| Default | Gradient ↓ #FFFFFF → #F1F0F7 | 1px #D5D8E9 | #313949 |
+| Hover | Gradient ↓ #FFFFFF → #EAEBF5 | 1px #D5D8E9 | #313949 |
+| Click/Hold | Solid #F0F1F8 | 1px #D5D8E9 | #313949 |
+| Disable | Solid #F7F7FB | 1px #D5D8E9 | Lightened |
+| Loader | Solid #F0F1F8 + dark spinner | 1px #D5D8E9 | Hidden |
+
+### Success Button States
+
+| State | Fill | Text |
+|---|---|---|
+| Default | Gradient ↓ #11B670 → #0F935B | #FFFFFF |
+| Hover | Gradient ↓ #13C177 → #0F9A5F | #FFFFFF |
+| Click/Hold | Solid #0F935B | #FFFFFF |
+| Disable | Solid #67CCA1 | #FFFFFF |
+| Loader | Solid #0F935B + white spinner | Hidden |
+
+### Negative Button States
+
+| State | Fill | Text |
+|---|---|---|
+| Default | Gradient ↓ #FF4657 → #E23041 | #FFFFFF |
+| Hover | Gradient ↓ #FC5060 → #D30B1E | #FFFFFF |
+| Click/Hold | Solid #D30B1E | #FFFFFF |
+| Disable | Solid #FFB1B8 | #FFFFFF |
+| Loader | Solid #D30B1E + white spinner | Hidden |
+
+### Outline Red Button States
+
+| State | Fill | Border | Text |
+|---|---|---|---|
+| Default | #FFF2F3 | 1px #FF4D5B | #FF4D5B |
+| Hover | #FFE8EA | 1px #FF4D5B | #FF4D5B |
+| Click/Hold | #FFE8EA | 1px #FF4D5B | #FF4D5B |
+| Disable | #FFF2F3 (0.5) | 1px #FF4D5B (0.5) | #FF4D5B (0.5) |
+| Loader | #FFE8EA + red spinner | 1px #FF4D5B | Hidden |
+
+### Ghost Red Button States
+
+| State | Fill | Border | Text |
+|---|---|---|---|
+| Default | Transparent | None | #FF4D5B |
+| Hover | #FFE8EA | None | #FF4D5B |
+| Click/Hold | #FFE8EA | None | #FF4D5B |
+| Disable | Transparent | None | #FF4D5B (0.6) |
+| Loader | #FFE8EA + red spinner | None | Hidden |
+
+### Orange / Warning Button States
+
+| State | Fill | Text |
+|---|---|---|
+| Default | Gradient ↓ #F5973A → #DB852F | #FFFFFF |
+| Hover | Gradient ↓ #F5973A → #CF7D2B | #FFFFFF |
+| Click/Hold | Solid #CF7D2B | #FFFFFF |
+| Disable | Solid #EEBB8B | #FFFFFF |
+| Loader | Solid #CF7D2B + white spinner | Hidden |
+
+### Outline Orange Small States
+
+| State | Fill | Border | Text |
+|---|---|---|---|
+| Default | #FFF9ED | 1px #E28C27 | #E28C27 |
+| Hover | #FEF2DA | 1px #E28C27 | #E28C27 |
+| Click/Hold | #FEF2DA | 1px #E28C27 | #E28C27 |
+| Disable | #FFF9ED (0.6) | 1px #E28C27 (0.6) | #E28C27 (0.6) |
+
+---
+
+## Color Variants
+
+| Color | Name | Usage | Primary Token IDs |
+|---|---|---|---|
+| Blue | Primary | Default primary actions | 90298:926, 90298:925 |
+| Green | Success | Positive confirmations | 90298:1036, 90298:1037 |
+| Red | Negative | Destructive / delete actions | 90298:1011, 90298:1012 |
+| Orange | Warning | Caution / secondary actions | 90298:1065, 90298:1066 |
+| Gray | Default | Neutral / cancel actions | 90298:970, 90298:971 |
+| Blue (Outline) | Outline Blue | Medium emphasis blue | 90298:1110, 90811:54 |
+| Green (Outline) | Outline Green | Medium emphasis green | 90298:1114, 90298:1229 |
+| Red (Outline) | Outline Red | Medium emphasis red | 90298:1118, 90298:1233 |
+| Orange (Outline) | Outline Orange | Medium emphasis orange | 90298:1124, 90298:1236 |
+| Blue→Pink | Zia | AI-powered actions | 90298:1357, 90298:1358 |
+
+---
+
+## Spacing & Measurements
+
+| Property | Default (32px) | Small (27px) | Extreme Small (19px) |
+|---|---|---|---|
+| Corner Radius | 6px | 4px | 4px |
+| Vertical Padding | 8px | 6px | 3px |
+| Horizontal Padding | 14px | 12px | 10px |
+| Height | 32px | 27px | 19px |
+| Font | Zoho Puvi, 14px, Medium | Zoho Puvi, 13px, Medium | Zoho Puvi, 11px, Medium |
+| Icon Gap | 3px | 3px | 10px |
+| Icon Size | 16×16px | 14×14px | 12×12px |
+
+---
+
+## Usage Guidelines
+
+### Do
+
+1. Maintain clear hierarchy - Use one Primary action per screen space. Accompany with Default or Ghost buttons for secondary actions.
+2. Use concise, active verbs - Label buttons with explicit CRM actions like "Create Lead", "Export CSV", or "Send Invite".
+3. Always pair Primary with Default - Every Primary Button should have a Default "escape" nearby (Cancel, Close, Back).
+4. Use Loading state for async - Always show Loading state during API calls, file uploads, and data processing.
+5. Size consistency in groups - All buttons in the same row must use the same size tier.
+6. Reference design tokens - Always use token IDs, never hardcode hex values.
+7. Destructive actions need confirmation - Negative buttons should trigger a confirmation dialog.
+
+### Don't
+
+1. Avoid multiple competing primary actions - Multiple primary buttons side-by-side causes action confusion.
+2. Avoid vague passive labels - Avoid "Click Here" or "Proceed". Use descriptive labels.
+3. Don't use Negative for Cancel - Cancel is Default variant. Negative is ONLY for destructive actions.
+4. Don't mix button sizes - Never combine 32px, 27px, and 19px in the same group.
+5. Don't create custom colors - Only use approved variant tokens.
+6. Don't use Extreme Small as primary CTA - 19px buttons for dense desktop UIs only.
+7. Don't remove focus indicators - Keyboard accessibility requires visible focus rings.
+
+---
+
+## Links
+
+### Primary Link
+
+| State | Color | Token | Decoration |
+|---|---|---|---|
+| Default | #5464F2 (Blue) | 90811:54 | No underline |
+| Hover | #5464F2 (Blue) | 90811:54 | Underlined |
+| Disabled | #616E88 (Muted) | 90298:1286 | No underline, opacity 0.6 |
+
+### Default Link (Underline)
+
+| State | Color | Token | Decoration |
+|---|---|---|---|
+| Default | #616E88 (Gray) | 90298:1286 | Underlined |
+| Hover | #5464F2 (Blue) | 90811:54 | Underlined |
+| Disabled | #616E88 (Muted) | 90298:1286 | Muted, opacity 0.6 |
+
+### Red Link
+
+| State | Color | Token | Decoration |
+|---|---|---|---|
+| Default | #FF4D5B (Red) | 90298:1233 | No underline |
+| Hover | #D30B1E (Darker red) | 90298:1025 | Underlined |
+| Disabled | #FFB1B8 (Muted pink) | 90298:1029 | No underline |
+
+---
+
+## Icon & Menu Buttons
+
+### Icon-Only (More)
+
+| Size | Dimensions | Fill | Border | Icon |
+|---|---|---|---|---|
+| Small More | 36×27px | Default gradient | 1px #D5D8E9 | 14×14px "..." |
+| Default More | 46×32px | Default gradient | 1px #D5D8E9 | 16×16px "..." |
+
+### More Button (Primary & Default)
+
+| Variant | Fill | Border | Text Color | Chevron |
+|---|---|---|---|---|
+| Primary More | Gradient #124DC3 → #5767F6 | None | #FFFFFF | White chevron |
+| Default More | Gradient #FFFFFF → #F1F0F7 | 1px #D5D8E9 | #313949 | Dark chevron |
+
+### Outline Blue More (Split Button)
+
+Split button: main action + dropdown separator + chevron section.
+
+---
+
+## Button Grouping Combinations
+
+| Pattern | Buttons | Usage |
+|---|---|---|
+| Accept / Reject | Success + Negative | Approval workflows |
+| Create / Cancel | Primary + Default | Record creation |
+| Save / Cancel | Primary + Default | Edit forms |
+| Save / Save & Close / Cancel | Primary + Primary + Default | Multi-action forms |
+| Save / Add & Reorder / Cancel | Primary + Outline Blue + Default | List management |
+| Reinstate / Deactivate | Outline Green + Outline Red | Status toggle |
+
+### Button Group Rules
+
+- Primary always on the RIGHT (LTR) or LEFT (RTL)
+- Default/Cancel provides the safe escape on the left
+- Never pair Primary + Negative in the same group
+- Maximum 3 buttons visible simultaneously
+- All buttons in a group must be same height
+
+---
+
+## Zia / AI Buttons
+
+| Variant | Fill | Border | Text | Tokens |
+|---|---|---|---|---|
+| Zia Fill | Gradient → #1471D9 → #E21565 | None | #FFFFFF | 90298:1357, 90298:1358 |
+| Zia Outline | Gradient #EEF7FF → #FFEFF5 | 1px Gradient #99CAF → #FFC9DD | Gradient | 90298:1361, 90298:1362, 90298:1369, 90298:1370 |
+
+---
+
+## Small Buttons & Button Loaders
+
+### Small Buttons (27px)
+
+| Label | Variant | Fill | Border | Text |
+|---|---|---|---|---|
+| Add | Primary Small | Gradient #124DC3 → #5767F6 | None | #FFFFFF |
+| Cancel | Default Small | Gradient #FFFFFF → #F1F0F7 | 1px #D5D8E9 | #313949 |
+| Delete | Negative Small | Gradient #FF4657 → #E23041 | None | #FFFFFF |
+| Accept | Success Small | Gradient #11B670 → #0F935B | None | #FFFFFF |
+| Reinvite | Outline Blue Small | Solid #F0F1FF | 1px #5464F2 | #5464F2 |
+| Reject | Outline Red Small | Solid #FFF2F3 | 1px #FF4D5B | #FF4D5B |
+| Assign | Ghost Blue Small | Solid #EEEFFF | None | #5464F2 |
+
+### Meeting Invitation Buttons
+
+| Label | Variant | Fill | Border | Action |
+|---|---|---|---|---|
+| Yes | Outline Green Small | #E9FBF4 | 1px #19B171 | Accept |
+| Maybe | Outline Orange Small | #FFF9ED | 1px #E28C27 | Tentative |
+| No | Outline Red Small | #FFF2F3 | 1px #FF4D5B | Decline |
+
+### Button Loaders (Default 32px)
+
+| Variant | Spinner | Background |
+|---|---|---|
+| Primary | White | #1344A9 |
+| Default | #313949 | #F0F1F8 + border #D5D8E9 |
+| Negative | White | #D30B1E |
+| Success | White | #0F935B |
+| Outline Blue | #5464F2 | #E5E8FF + border #5464F2 |
+| Outline Red | #FF4D5B | #FFE8EA + border #FF4D5B |
+| Ghost Blue | #5464F2 | #EEEFFF |
+
+### Button Loaders (Small 27px)
+
+| Variant | Spinner | Background |
+|---|---|---|
+| Primary Sm. | White | #1344A9 |
+| Default Sm. | #313949 | #F0F1F8 + border |
+| Negative Sm. | White | #D30B1E |
+| Outline Blue Sm. | #5464F2 | #E5E8FF + border |
+| Outline Green Sm. | #19B171 | #DCF7EB + border |
+| Outline Orange Sm. | #E28C27 | #FEF2DA + border |
+
+---
+
+## After Click States
+
+| Button | After Click Fill | Text |
+|---|---|---|
+| Yes (Accept) | Solid #0F935B | #FFFFFF + checkmark |
+| Maybe (Tentative) | Solid #CF7D2B | #FFFFFF + checkmark |
+| No (Decline) | Solid #D30B1E | #FFFFFF + checkmark |
+
+---
+
+## Keyboard Focus States
+
+| Button | Focus Ring Color | Width | Offset |
+|---|---|---|---|
+| All Buttons | #5464F2 (token 90811:54) | 2px | 2px outside |
+| Links | Underline appears | — | — |
+
+---
+
+## Warning Buttons
+
+| Variant | Size | States | Fill (Default) | Border |
+|---|---|---|---|---|
+| Warning Button | Small (27px) | Default, Hover, Click, Disable, Loader | Gradient #F5973A → #DB852F | None |
+| Outline Orange | Small (27px) | Default, Hover, Click, Disable | Solid #FFF9ED | 1px #E28C27 |
+
+---
+
+## Breadcrumb & Pagination
+
+### Breadcrumb
+
+Module > All Leads > John Smith
+
+| Part | Color | Token | Style |
+|---|---|---|---|
+| Parent links | #5464F2 (Blue) | 90811:54 | Clickable, underline on hover |
+| Separator (>) | #616E88 (Gray) | 90298:1286 | Non-interactive |
+| Current page | #313949 (Dark) | 90298:104 | Bold, non-clickable |
+
+### Pagination
+
+| Variant | Active Page | Inactive Page | Height |
+|---|---|---|---|
+| Fill | Blue solid #5464F2, white text | No fill, dark text | 29px |
+| Outline | Blue outline #5464F2, blue text | No fill, dark text | 29px |
+
+---
+
+## Gradient Direction Reference
+
+| Variant | Direction | CSS | Figma Transform |
+|---|---|---|---|
+| Primary | Bottom-to-top (↑) | linear-gradient(0deg) | [[0,-1,1],[1,0,-0.5]] |
+| Default | Top-to-bottom (↓) | linear-gradient(180deg) | [[0,1,0],[-1,0,0.5]] |
+| Success | Top-to-bottom (↓) | linear-gradient(180deg) | [[0,1,0],[-1,0,0.5]] |
+| Negative | Top-to-bottom (↓) | linear-gradient(180deg) | [[0,1,0],[-1,0,0.5]] |
+| Warning | Top-to-bottom (↓) | linear-gradient(180deg) | [[0,1,0],[-1,0,0.5]] |
+| Zia | Left-to-right (→) | linear-gradient(90deg) | [[1,0,0],[0,1,0]] |
+
+---
+
+## Complete Token Map
+
+### Primary: 90298:926 (#124DC3), 90298:925 (#5767F6), 90298:961 (#0E3B98), 90298:960 (#3E4DEC), 90298:962 (#1344A9), 90298:963 (#ADB3EE)
+### Default: 90298:970 (#FFFFFF), 90298:971 (#F1F0F7), 90298:980 (#FFFFFF), 90298:981 (#EAEBF5), 90298:991 (#F0F1F8), 90298:999 (#F7F7FB), 90298:975 (#D5D8E9)
+### Success: 90298:1036 (#11B670), 90298:1037 (#0F935B), 90298:1048 (#13C177), 90298:1049 (#0F9A5F), 90298:1053 (#0F935B), 90298:1057 (#67CCA1)
+### Negative: 90298:1011 (#FF4657), 90298:1012 (#E23041), 90298:1020 (#FC5060), 90298:1021 (#D30B1E), 90298:1025 (#D30B1E), 90298:1029 (#FFB1B8)
+### Warning: 90298:1065 (#F5973A), 90298:1066 (#DB852F), 90298:1067 (#F5973A), 90298:1068 (#CF7D2B), 90298:1069 (#CF7D2B), 90298:1071 (#EEBB8B)
+### Outline Blue: 90298:1110 (#F0F1FF), 90298:1112 (#E5E8FF), 90298:1111 (#F0F1FF), 90811:54 (#5464F2), 90298:1224 (#5464F2)
+### Outline Green: 90298:1114 (#E9FBF4), 90298:1115 (#DCF7EB), 90298:1117 (#E9FBF4), 90298:1229 (#19B171), 90298:1231 (#19B171)
+### Outline Red: 90298:1118 (#FFF2F3), 90298:1119 (#FFE8EA), 90298:1121 (#FFF2F3), 90298:1233 (#FF4D5B), 90298:1235 (#FF4D5B)
+### Outline Orange: 90298:1124 (#FFF9ED), 90298:1125 (#FEF2DA), 90298:1126 (#FEF2DA), 90298:1127 (#FFF9ED), 90298:1236-1239 (#E28C27)
+### Ghost: 90298:1122 (#EEEFFF), 90298:1123 (#FFE8EA)
+### Zia: 90298:1357 (#1471D9), 90298:1358 (#E21565), 90298:1361 (#EEF7FF), 90298:1362 (#FFEFF5), 90298:1369 (#99CAF), 90298:1370 (#FFC9DD)
+### Utility: 84420:4367 (#FFFFFF), 90298:104 (#313949), 90298:1286 (#616E88), 90816:0 (#FFFFFF menu), 90312:2011 (#CED0E1 menu border)</script>
+<script type="text/plain" data-md="Inputs"># Inputs (Text Field)
+
+Text input component specs — extracted from Figma file `-Official--CRM-Styleguide---Components--Copy-` (node `546:126930`, "CRM Component 1" — Form Controls sheet).
+
+---
+
+## CSS Custom Properties
+
+```css
+:root {
+  --input-height: 34px;
+  --input-height-small: 27px;
+  --input-radius: 6px;
+  --input-padding-y: 8px;
+  --input-padding-x: 10px;
+
+  --input-default-outline: #C0C8E2;
+  --input-hover-outline: #797883;
+  --input-focus-outline: #5464F2;
+  --input-focus-shadow: #4c5efd80; /* box-shadow color, 6px blur, no spread */
+  --input-error-outline: #FF5D5A;
+  --input-disable-outline: #D2D9F1;
+  --input-disable-bg: #F5F6F8;
+  --input-icon-bg: #F4F4F6;
+  --input-placeholder-text: #8C91AB;
+  --input-auto-update-bg: #FFFFEA; /* background for auto-filled/system-updated fields */
+}
+```
+
+---
+
+## Base structure
+
+Every input is a bordered box with a **3px colored indicator bar** flush against the inner-left edge (present in all states — transparent/matching background in Default, colored in Error/Mandatory). Content area uses `10px` horizontal / `8px` vertical padding.
+
+```css
+.input {
+  display: flex;
+  align-items: center;
+  height: var(--input-height);
+  border: 1px solid var(--input-default-outline);
+  border-radius: var(--input-radius);
+  background: #ffffff;
+}
+.input__indicator-bar {
+  width: 3px;
+  height: 32px; /* height - 2px for border */
+}
+.input__content {
+  flex: 1;
+  padding: var(--input-padding-y) var(--input-padding-x);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.input__text {
+  font-family: 'Zoho Puvi', sans-serif;
+  font-size: 14px;
+  font-weight: 400;
+}
+.input__placeholder { color: var(--input-placeholder-text); }
+```
+
+---
+
+## States
+
+| State | Border | Background | Notes |
+|-------|--------|------------|-------|
+| Default | `--input-default-outline` (`#C0C8E2`) | `#FFFFFF` | |
+| Hover | `--input-hover-outline` (`#797883`) | `#FFFFFF` | |
+| Focus | `--input-focus-outline` (`#5464F2`) | `#FFFFFF` | Add `box-shadow: 0 0 6px var(--input-focus-shadow)` |
+| Error / Mandatory | `--input-error-outline` (`#FF5D5A`) | `#FFFFFF` | Indicator bar also turns red. Helper text below, 11px, same red — see `typography.md` restricted-font note |
+| Disabled | `--input-disable-outline` (`#D2D9F1`) | `--input-disable-bg` (`#F5F6F8`) | |
+| Auto-updated | (unchanged) | `--input-auto-update-bg` (`#FFFFEA`) | Used to flag system-populated/auto-filled fields |
+
+```css
+.input:hover { border-color: var(--input-hover-outline); }
+.input:focus-within {
+  border-color: var(--input-focus-outline);
+  box-shadow: 0 0 6px var(--input-focus-shadow);
+}
+.input--error { border-color: var(--input-error-outline); }
+.input--error .input__indicator-bar { background: var(--input-error-outline); }
+.input--disabled {
+  border-color: var(--input-disable-outline);
+  background: var(--input-disable-bg);
+  cursor: not-allowed;
+}
+.input--auto-updated { background: var(--input-auto-update-bg); }
+```
+
+---
+
+## Sizes
+
+| Size | Height | Width (as designed) |
+|------|--------|----------------------|
+| Default | 34px | 390px (flexible in practice) |
+| Small | 27px | Sampled at 210px |
+
+> Rule of thumb from this sheet's annotations: **Input, Dropdown, and Search components should all share the same 34px default height** for visual consistency across the form-control family.
+
+---
+
+## Input with Icon
+
+A variant exists with an icon inside the field (`--input-icon-bg: #F4F4F6` for the icon's background chip). Use this for search fields, currency fields (e.g. "USD" label prefix seen in this sheet), or fields needing a leading/trailing icon.
+
+---
+
+## Usage Rules
+
+- Always pair inputs with a `<label>` element (not shown in this sheet, but standard practice — confirm label typography from a dedicated label frame if available).
+- Use the auto-update background (`#FFFFEA`) sparingly — only for fields the system has just populated automatically, to draw the user's attention.
+- Never combine Error state styling with Disabled state — disabled fields shouldn't show validation errors.
+- Keep Input, Dropdown, and Search components visually consistent at 34px height per this system's own annotation.
+- Restricted 11px font is reserved for input error/helper text only (see `typography.md`).
+
+---
+
+## Related files
+- `checkbox.md` — checkbox control
+- `radio-button.md` — radio control
+- `switch.md` — toggle switch
+- `description.md` — multi-line text area ("Description" component)
+- `tooltip.md` — tooltip used alongside form fields
+</script>
+<script type="text/plain" data-md="Switch"># Switch (Toggle)
+
+Extracted from Figma node `546:126930` (Form Controls sheet), instance `546:127054`.
+
+---
+
+## CSS Custom Properties
+
+```css
+:root {
+  --switch-track-width: 30px;
+  --switch-track-height: 18px;
+  --switch-thumb-size: 14px;
+  --switch-thumb-inset: 2px;
+
+  --switch-track-off: #D7D9EA;    /* Component/Switch/Grey */
+  --switch-track-on: #72C98A;     /* Component/Switch/Active-Green */
+  --switch-track-disabled: #E5E7F0;
+  --switch-thumb-bg: #ffffff;
+  --switch-thumb-disabled-bg: #ffffff; /* Component/Switch/Circle Disable Bg */
+}
+```
+
+## Base
+
+```css
+.switch-track {
+  width: var(--switch-track-width);
+  height: var(--switch-track-height);
+  border-radius: 100px;
+  background: var(--switch-track-off);
+  position: relative;
+  cursor: pointer;
+}
+.switch-thumb {
+  width: var(--switch-thumb-size);
+  height: var(--switch-thumb-size);
+  border-radius: 100px;
+  background: var(--switch-thumb-bg);
+  position: absolute;
+  top: var(--switch-thumb-inset);
+  left: var(--switch-thumb-inset); /* becomes left: 14px when active */
+  transition: left 0.15s ease;
+}
+.switch-track--active {
+  background: var(--switch-track-on);
+}
+.switch-track--active .switch-thumb {
+  left: 14px; /* track width (30) - inset (2) - thumb (14) */
+}
+.switch-track--disabled {
+  background: var(--switch-track-disabled);
+  cursor: not-allowed;
+}
+.switch-track--disabled .switch-thumb {
+  background: var(--switch-thumb-disabled-bg);
+}
+```
+
+---
+
+## States
+
+Four variant instances were present on the sheet (Normal / Hover / Focus-ish / Disabled groupings) — only the base Off-state token set was confirmed directly. Active/On, Hover, and Focus ring treatments should be verified against a dedicated states callout if precision matters for your build.
+
+---
+
+## Usage Rules
+
+- Use a switch for binary settings that take effect immediately (no "Save" step required).
+- Use a checkbox instead if the choice is part of a form that requires explicit submission.
+- Always label switches clearly with the "on" state's meaning stated first (e.g. "Email notifications" rather than "Disable emails").
+
+## Not yet captured
+- Hover and focus-ring treatment
+- Exact active/on thumb position confirmation (calculated here, not sampled directly)
+</script>
+<script type="text/plain" data-md="Colors"># Colors
+
+All color tokens for the brand design system. Extracted from Figma file `-Official--CRM-Styleguide---Components--Copy-` (node `253:36389`, "Brand Colors"). Define these as CSS custom properties at `:root` in every HTML build.
+
+---
+
+## Primary Palette
+
+Used for typography, icons, links, and interactive states.
+
+| Token | Hex | Usage |
+|-------|------|------|
+| Primary/Base | `#313949` | Default text color |
+| Primary/Label | `#616E88` | Labels, secondary text |
+| Primary/Heading | `#202123` | Page headings |
+| Primary/Paragraph | `#434D5E` | Body text |
+| Primary/Negative | `#FF5D5A` | Error text, destructive actions |
+| Primary/Link | `#5464F2` | Hyperlinks, interactive text |
+| Primary/RedLink | `#FF5D5A` | Destructive/error inline links |
+| Primary/NotFound | `#8B9BB8` | Empty states, disabled information |
+| Primary/IconBgHover | `#E9EEF4` | Icon hover background |
+
+---
+
+## Status Tag Colors
+
+Used for badges, pills, status indicators, chips. Each status has a background, border, and text color — always use all three together as a set.
+
+| Status | Background | Border | Text |
+|--------|------------|--------|------|
+| Red | `#FFECEC` | `#FFADAC` | `#F14949` |
+| Green | `#DDF8EC` | `#8DD8B7` | `#009653` |
+| Orange | `#FDEDDD` | `#EFAC6A` | `#C46A0F` |
+| Blue | `#E6F0FC` | `#84B8F2` | `#338CF0` |
+| Purple | `#FAEAFF` | `#D684F3` | `#CA61EF` |
+
+---
+
+## Status Colors
+
+Used for banners, notifications, alerts, progress indicators, and standalone status dots (no bg/border needed).
+
+| Token | Hex |
+|-------|------|
+| Status/Negative (Red) | `#F14949` |
+| Status/Orange | `#E88625` |
+| Status/Green | `#12AA67` |
+
+---
+
+## Section Background Colors
+
+Used for page sections and subtle surface differentiation. Use these to establish hierarchy rather than relying on borders.
+
+| Token | Hex | Usage |
+|-------|------|------|
+| Bg1 | `#F0F4FF` | Default section background |
+| Bg2 | `#F4F7FF` | Secondary section background |
+| Bg3 | `#F8FAFF` | Light neutral background |
+| Bg4 | `#EDF0F9` | List View & Setup page header |
+| Bg5 | `#DFE4EF` | Calendar & Customize Setup |
+| Bg6 | `#FFF9C4` | Zia search result |
+| Bg7 | `#EAFAF3` | Zia UI background |
+| Pastel Red | `#FFADAC` | Zia soft error background |
+| Pastel Green | `#8DD8B7` | Zia soft success background |
+| Pastel Orange | `#EFC06A` | Zia soft warning background |
+
+---
+
+## Border Colors
+
+Corrected against the authoritative Figma variables (node `421:42067`) — supersedes the single-token list from the first colors pull.
+
+| Token | Hex | Usage |
+|-------|------|------|
+| Border/1-1 | `#9C9CA6` | Strong emphasis borders |
+| Border/1 | `#C5C4D3` | Default component border |
+| Border/2 | `#D6D6E3` | Secondary border |
+| Border/3 | `#DCDBEE` | Light divider (matches the "Border 3" token seen in buttons.md) |
+| Border/4 | `#EDF0F4` | Very subtle border / table row separators |
+
+---
+
+## Kanban Card Colors
+
+Used only for Kanban cards, categories, labels, CRM modules, and visual grouping — **never for status indication** (use Status Tag Colors for that). Each has a background, inner border, and top/outer border — always apply all three together.
+
+| Name | Background | Inner Border | Top/Outer Border |
+|------|------------|---------------|-------------------|
+| Kanban-1 (Cyan) | `#DAF5F7` | `#CFE9EA` | `#99D1D3` |
+| Kanban-2 (Light Blue) | `#DAE7F7` | `#CADAEC` | `#9DB8D9` |
+| Kanban-3 (Green) | `#DFF7E4` | `#C7E8CE` | `#93CB9D` |
+| Kanban-4 (Sky) | `#DAECF7` | `#C9DEEC` | `#98BFD7` |
+| Kanban-5 (Sand) | `#F7EDDA` | `#E9DECA` | `#D2BC93` |
+| Kanban-6 (Lavender) | `#DAE0F7` | `#C5CCE7` | `#9BA7D6` |
+| Kanban-7 (Purple) | `#F7DAEF` | `#ECCCE3` | `#D095C0` |
+| Kanban-8 (Peach) | `#F7E2DA` | `#EDD5CC` | `#D6AD9E` |
+| Kanban-9 (Pink) | `#F7DAE4` | `#EECBD7` | `#DCA2B6` |
+| Kanban-10 (Violet) | `#E7DAF7` | `#D8C9EB` | `#AD93CD` |
+| Kanban-11 (Light Sand) | `#F7EADA` | `#EDDCC8` | `#DFC4A3` |
+| Kanban-12 (Light Purple) | `#EDDAF7` | `#E1CEEB` | `#C8A3DC` |
+| Kanban-13 (Light Red) | `#FCDFDF` | `#F2D1D1` | `#F0AEAE` |
+| Kanban-14 (Soft Violet) | `#DFDAF7` | `#D5CFED` | `#958AC9` |
+| Kanban-15 (Light Orange) | `#F7E5DA` | `#ECD7CB` | `#DAB6A0` |
+
+---
+
+## Multiselect Tag Colors
+
+| Token | Hex | Usage |
+|-------|------|------|
+| Multiselect/Bg | `#F3F5FF` | Tag background |
+| Multiselect/Border | `#D2D7FF` | Tag border (outer + inner) |
+| Multiselect/BgWhiteBorder | `#DCDBEE` | Border variant on white background |
+| Multiselect/CloseIconBg | `#5464F2` | "x" remove icon background |
+
+---
+
+## Setup Left Panel Colors
+
+| Token | Hex | Usage |
+|-------|------|------|
+| SetupPanel/ContainerBg | `#FFFFFF` | Panel background |
+| SetupPanel/ContainerBorder | `#DCDBEE` | Panel border |
+| SetupPanel/ActiveBg | `#F2F5FE` | Active nav item background |
+
+---
+
+## Generic Pastel Palette
+
+Used sparingly for illustrations, cards, empty states, highlights, AI-generated visuals.
+
+| Token | Hex |
+|-------|------|
+| Pastel-1 | `#DAF5F7` |
+| Pastel-2 | `#DAE7F7` |
+| Pastel-3 | `#DFF7E4` |
+| Pastel-4 | `#DAECF7` |
+| Pastel-5 | `#F7EDDA` |
+| Pastel-6 | `#EDDAF7` |
+| Pastel-7 | `#F7E2DA` |
+| Pastel-8 | `#DFDAF7` |
+| Pastel-9 | `#FCDFDF` |
+
+---
+
+## CSS Custom Properties
+
+```css
+:root {
+  /* Primary palette */
+  --primary-base: #313949;
+  --primary-label: #616E88;
+  --primary-heading: #202123;
+  --primary-paragraph: #434D5E;
+  --primary-negative: #FF5D5A;
+  --primary-link: #5464F2;
+  --primary-red-link: #FF5D5A;
+  --primary-not-found: #8B9BB8;
+  --primary-icon-bg-hover: #E9EEF4;
+
+  /* Status tag colors */
+  --tag-red-bg: #FFECEC;    --tag-red-border: #FFADAC;    --tag-red-text: #F14949;
+  --tag-green-bg: #DDF8EC;  --tag-green-border: #8DD8B7;  --tag-green-text: #009653;
+  --tag-orange-bg: #FDEDDD; --tag-orange-border: #EFAC6A; --tag-orange-text: #C46A0F;
+  --tag-blue-bg: #E6F0FC;   --tag-blue-border: #84B8F2;   --tag-blue-text: #338CF0;
+  --tag-purple-bg: #FAEAFF; --tag-purple-border: #D684F3; --tag-purple-text: #CA61EF;
+
+  /* Status colors */
+  --status-negative: #F14949;
+  --status-orange: #E88625;
+  --status-green: #12AA67;
+
+  /* Section background colors */
+  --bg-1: #F0F4FF;  --bg-2: #F4F7FF;  --bg-3: #F8FAFF;
+  --bg-4: #EDF0F9;  --bg-5: #DFE4EF;  --bg-6: #FFF9C4;  --bg-7: #EAFAF3;
+  --pastel-red: #FFADAC;  --pastel-green: #8DD8B7;  --pastel-orange: #EFC06A;
+
+  /* Border colors */
+  --border-1-1: #9C9CA6;
+  --border-1: #C5C4D3;
+  --border-2: #D6D6E3;
+  --border-3: #DCDBEE;
+  --border-4: #EDF0F4;
+
+  /* Generic pastel palette */
+  --pastel-1: #DAF5F7;  --pastel-2: #DAE7F7;  --pastel-3: #DFF7E4;
+  --pastel-4: #DAECF7;  --pastel-5: #F7EDDA;  --pastel-6: #EDDAF7;
+  --pastel-7: #F7E2DA;  --pastel-8: #DFDAF7;  --pastel-9: #FCDFDF;
+
+  /* Kanban card colors */
+  --kanban-1-bg: #DAF5F7;  --kanban-1-inner: #CFE9EA;  --kanban-1-outer: #99D1D3;
+  --kanban-2-bg: #DAE7F7;  --kanban-2-inner: #CADAEC;  --kanban-2-outer: #9DB8D9;
+  --kanban-3-bg: #DFF7E4;  --kanban-3-inner: #C7E8CE;  --kanban-3-outer: #93CB9D;
+  --kanban-4-bg: #DAECF7;  --kanban-4-inner: #C9DEEC;  --kanban-4-outer: #98BFD7;
+  --kanban-5-bg: #F7EDDA;  --kanban-5-inner: #E9DECA;  --kanban-5-outer: #D2BC93;
+  --kanban-6-bg: #DAE0F7;  --kanban-6-inner: #C5CCE7;  --kanban-6-outer: #9BA7D6;
+  --kanban-7-bg: #F7DAEF;  --kanban-7-inner: #ECCCE3;  --kanban-7-outer: #D095C0;
+  --kanban-8-bg: #F7E2DA;  --kanban-8-inner: #EDD5CC;  --kanban-8-outer: #D6AD9E;
+  --kanban-9-bg: #F7DAE4;  --kanban-9-inner: #EECBD7;  --kanban-9-outer: #DCA2B6;
+  --kanban-10-bg: #E7DAF7; --kanban-10-inner: #D8C9EB; --kanban-10-outer: #AD93CD;
+  --kanban-11-bg: #F7EADA; --kanban-11-inner: #EDDCC8; --kanban-11-outer: #DFC4A3;
+  --kanban-12-bg: #EDDAF7; --kanban-12-inner: #E1CEEB; --kanban-12-outer: #C8A3DC;
+  --kanban-13-bg: #FCDFDF; --kanban-13-inner: #F2D1D1; --kanban-13-outer: #F0AEAE;
+  --kanban-14-bg: #DFDAF7; --kanban-14-inner: #D5CFED; --kanban-14-outer: #958AC9;
+  --kanban-15-bg: #F7E5DA; --kanban-15-inner: #ECD7CB; --kanban-15-outer: #DAB6A0;
+
+  /* Multiselect tag */
+  --multiselect-bg: #F3F5FF;
+  --multiselect-border: #D2D7FF;
+  --multiselect-bg-white-border: #DCDBEE;
+  --multiselect-close-icon-bg: #5464F2;
+
+  /* Setup left panel */
+  --setup-panel-bg: #FFFFFF;
+  --setup-panel-border: #DCDBEE;
+  --setup-panel-active-bg: #F2F5FE;
+}
+```
+
+---
+
+## Color Rules
+
+- Reserve Red exclusively for destructive or error states.
+- Use Green only for success or completion states.
+- Use Orange for warnings and attention-required indicators.
+- Blue indicates links, informational content, or neutral interactive elements.
+- Purple is reserved for skipped or optional states.
+- Status tag colors are always used as a bg + border + text set — never mix and match.
+- Kanban colors are for visual grouping/categorization only — never use them to indicate status.
+- Pastel colors should be used sparingly — only for cards, illustrations, AI suggestions, and empty states.
+- Keep status colors consistent across tables, badges, alerts, banners, and cards.
+- Prefer semantic color tokens instead of hardcoded hex values.
+
+---
+
+## Not yet captured (send this frame next)
+- Full typography scale (H1–H5, body, caption sizes/weights/line-heights). Only one heading token has surfaced so far: `H2 — Zoho Puvi Semibold, 18px/22px`. Send your typography/type-scale frame to complete `typography.md`.
+</script>
+
+<script>
+/* ============================================================================
+   1. GENERIC MARKDOWN PARSER — knows nothing about any specific component
+   ========================================================================== */
+function parseMD(src){
+  const lines = src.split(/\r?\n/);
+  const root = {title:'__root__', level:0, children:[], tables:[], lines:[]};
+  const stack = [root];
+  let i = 0;
+  while(i < lines.length){
+    const line = lines[i];
+    const h = /^(#{1,6})\s+(.*)$/.exec(line);
+    if(h){
+      const level = h[1].length;
+      while(stack.length > 1 && stack[stack.length-1].level >= level) stack.pop();
+      const node = {title:h[2].trim(), level, children:[], tables:[], lines:[]};
+      stack[stack.length-1].children.push(node);
+      stack.push(node);
+      i++; continue;
+    }
+    if(/^\s*\|/.test(line)){
+      const buf = [];
+      while(i < lines.length && /^\s*\|/.test(lines[i])) buf.push(lines[i++]);
+      const t = parseTable(buf);
+      if(t) stack[stack.length-1].tables.push(t);
+      continue;
+    }
+    stack[stack.length-1].lines.push(line);
+    i++;
+  }
+  return root;
+}
+function parseTable(buf){
+  const cells = s => s.trim().replace(/^\|/,'').replace(/\|$/,'').split('|').map(c=>c.trim());
+  if(buf.length < 2) return null;
+  const headers = cells(buf[0]);
+  if(!/^[\s|:-]+$/.test(buf[1])) return null;
+  const rows = buf.slice(2).map(cells).filter(r=>r.length && r.some(c=>c));
+  return {headers, rows, obj: rows.map(r=>{const o={};headers.forEach((h,i)=>o[h]=r[i]??'');return o;})};
+}
+function walk(node, fn){ (node.children||[]).forEach(c=>{fn(c); walk(c,fn);}); }
+function section(root, title){ let hit=null; const want=norm(title); walk(root,n=>{ if(!hit && norm(n.title)===want) hit=n; }); return hit; }
+function tableOf(root, title, idx){ const s=section(root,title); return s ? s.tables[idx||0] : null; }
+function norm(s){ return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,''); }
+/* pull one section back out of the raw markdown, headings and tables intact */
+function sliceSection(src, title){
+  const lines = String(src).split(/\r?\n/);
+  const want = norm(title);
+  let start=-1, level=0;
+  for(let i=0;i<lines.length;i++){
+    const m=/^(#{1,6})\s+(.*)$/.exec(lines[i]);
+    if(m && norm(m[2])===want){ start=i; level=m[1].length; break; }
+  }
+  if(start<0) return null;
+  let end=lines.length;
+  for(let i=start+1;i<lines.length;i++){
+    const m=/^(#{1,6})\s+/.exec(lines[i]);
+    if(m && m[1].length<=level){ end=i; break; }
+  }
+  const out = lines.slice(start,end);
+  while(out.length && /^(\s*|-{3,})$/.test(out[out.length-1])) out.pop();
+  return out.join('\n');
+}
+
+/* ============================================================================
+   2. VALUE PARSERS — markdown cell text -> renderable style data
+   ========================================================================== */
+function normHex(h, warn){
+  let v = h.replace('#','');
+  if(v.length===3||v.length===4) v = v.split('').map(c=>c+c).join('').slice(0,6);
+  else if(v.length!==6 && v.length!==8){
+    const fixed = (v+'FFFFFF').slice(0,6);
+    if(warn){
+      const w = {raw:'#'+v.toUpperCase(), fixed:'#'+fixed.toUpperCase(), why:v.length+'-digit hex in the markdown, padded to 6'};
+      if(!warn.some(x=>x.raw===w.raw)) warn.push(w);
+    }
+    v = fixed;
+  }
+  return '#'+v.toUpperCase();
+}
+let WARN = [];
+function hexes(s){ return (String(s).match(/#[0-9A-Fa-f]{3,8}\b/g)||[]).map(h=>normHex(h,WARN)); }
+function tokens(s){ return String(s).match(/\b\d{4,6}:\d+\b/g) || []; }
+function opacityOf(s){ const m=/opacity\s*([0-9]*\.?[0-9]+)/i.exec(s) || /\(\s*(0?\.[0-9]+)\s*\)/.exec(s); return m?parseFloat(m[1]):1; }
+function parseFill(str){
+  const s = String(str||'').trim();
+  if(!s || s==='—' || s==='-') return null;
+  const out = {raw:s, tokens:tokens(s), opacity:opacityOf(s)};
+  const hx = hexes(s);
+  if(/gradient/i.test(s) && hx.length>=2){
+    out.type='gradient'; out.colors=hx;
+    out.arrow = s.includes('↑')?'↑' : s.includes('↓')?'↓' : s.includes('→')?'→' : '↓';
+    out.angle = out.arrow==='↑' ? 0 : out.arrow==='→' ? 90 : 180;
+    out.css = 'linear-gradient('+out.angle+'deg, '+hx[0]+' 0%, '+hx[hx.length-1]+' 100%)';
+    return out;
+  }
+  if(hx.length){ out.type='solid'; out.colors=[hx[0]]; out.css=hx[0]; return out; }
+  out.type = /transparent/i.test(s) ? 'transparent' : 'none';
+  out.colors=[]; out.css='transparent';
+  return out;
+}
+function parseBorder(str){
+  const s = String(str||'').trim();
+  if(!s || s==='—' || s==='-' || /^none/i.test(s)) return {width:0, raw:s||'None', tokens:[], opacity:1};
+  const w = /(\d+(?:\.\d+)?)px/.exec(s), hx = hexes(s);
+  const width = w ? parseFloat(w[1]) : (hx.length?1:0);
+  if(!width || !hx.length) return {width:0, raw:s, tokens:tokens(s), opacity:1};
+  return {width, color:hx[0], colors:hx, gradient:/gradient/i.test(s), opacity:opacityOf(s), raw:s, tokens:tokens(s)};
+}
+function parseColor(str){ const hx=hexes(str); return {hex:hx[0]||null, opacity:opacityOf(str), raw:String(str||'')}; }
+function px(str, fb){ const m=/(-?\d+(?:\.\d+)?)\s*px/.exec(String(str||'')); return m?parseFloat(m[1]):fb; }
+function rgba(hex,a){
+  if(!hex) return 'transparent';
+  if(a>=1) return hex;
+  const n = parseInt(hex.slice(1,7),16);
+  return 'rgba('+((n>>16)&255)+','+((n>>8)&255)+','+(n&255)+','+a+')';
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ============================================================================
+   3. MODEL BUILDER — any .md with the standard tables becomes a live component
+   ========================================================================== */
+const ALIAS = {ziafilled:'ziafill'};
+const key = s => { const n=norm(s); return ALIAS[n]||n; };
+const PRETTY = {'Zia (Filled)':'Zia Fill','Zia (Outline)':'Zia Outline'};
+
+/* The library supports two markdown shapes:
+   A "matrix"  — a Container Background Colors table, variants as rows, states as columns (Buttons.md)
+   B "states"  — a States table, states as rows, values as CSS custom properties (Inputs.md)
+   Both are normalised into M.STATES + M.CELLS below, so everything downstream is shape-agnostic. */
+const MATRIX_STATES_DEFAULT = [
+  {id:'default', name:'Default', col:'Default'},
+  {id:'hover',   name:'Hover',   col:'Hover'},
+  {id:'click',   name:'Pressed', col:'Click'},
+  {id:'disabled',name:'Disabled',col:'Disabled'},
+  {id:'loader',  name:'Loading', col:null},
+  {id:'focus',   name:'Focus',   col:'Default', synthetic:true}
+];
+
+/* strip markdown code ticks so `--x` (`#FFF`) parses like plain text */
+const untick = s => String(s||'').replace(/`/g,'');
+/* every --custom-property found in fenced css blocks */
+function parseCssVars(src){
+  const out = {};
+  String(src).replace(/--([a-zA-Z0-9-]+)\s*:\s*([^;\n}]+)/g, (m,k,v)=>{ out[k.toLowerCase()] = v.trim(); return m; });
+  return out;
+}
+/* first value of a css declaration anywhere in the file, e.g. cssDecl(src,'font-size') */
+function cssDecl(src, prop){
+  const m = new RegExp('(?:^|[;{\\s])'+prop+'\\s*:\\s*([^;\\n}]+)','i').exec(String(src));
+  return m ? m[1].trim() : '';
+}
+/* resolve var(--x) against the parsed custom properties */
+function resolveVars(str, vars){
+  return String(str||'').replace(/var\(\s*--([a-zA-Z0-9-]+)\s*\)/g, (m,k)=> vars[k.toLowerCase()] || m);
+}
+function varLike(vars, re, fb){
+  const k = Object.keys(vars).find(k=>re.test(k));
+  return k ? px(vars[k], fb) : fb;
+}
+
+/* ---- CSS rule parsing: many of these files carry their spec as CSS, not tables ---- */
+function parseCssRules(src){
+  const rules = [];
+  String(src).replace(/```css([\s\S]*?)```/g, function(m, body){
+    body.replace(/([^{}]+)\{([^}]*)\}/g, function(mm, sel, decls){
+      const d = {};
+      decls.replace(/([-a-zA-Z]+)\s*:\s*([^;]+)/g, function(x,k,v){ d[k.trim().toLowerCase()] = v.trim(); return x; });
+      sel.split(',').map(function(s){return s.trim();}).forEach(function(s){
+        if(s && s !== ':root' && !/^@/.test(s)) rules.push({sel:s, d:d});
+      });
+      return mm;
+    });
+    return m;
+  });
+  return rules;
+}
+const reEsc = s => String(s).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+const titleCase = s => String(s).replace(/[-_]+/g,' ').replace(/\b\w/g, c=>c.toUpperCase());
+const DIMENSION_ONLY = k => /^(min-|max-)?(width|height)$/.test(k);
+
+/* compose a renderable cell out of layered css declarations */
+function cellFromDecls(list, vars){
+  const d = {};
+  list.forEach(x => { if(x) Object.keys(x).forEach(k => d[k] = x[k]); });
+  const R = v => resolveVars(v, vars);
+  const bg = d.background || d['background-color'];
+  let border = d.border;
+  if(!border && (d['border-width'] || d['border-color'])){
+    border = (d['border-width']||'1px') + ' solid ' + (d['border-color']||'');
+  }
+  const pad = d.padding ? R(d.padding).split(/\s+/).map(v=>px(v,null)) : null;
+  return {
+    bg: bg ? R(bg) : null,
+    border: border ? R(border) : null,
+    text: d.color ? R(d.color) : null,
+    shadow: d['box-shadow'] ? R(d['box-shadow']) : null,
+    font: d['font-size'] ? px(R(d['font-size']), null) : null,
+    padT: pad ? pad[0] : null,
+    padR: pad ? (pad.length>1 ? pad[1] : pad[0]) : null,
+    padB: pad ? (pad.length>2 ? pad[2] : pad[0]) : null,
+    padL: pad ? (pad.length>3 ? pad[3] : (pad.length>1?pad[1]:pad[0])) : null,
+    outline: d.outline ? R(d.outline) + (d['outline-offset'] ? ' offset ' + R(d['outline-offset']) : '') : null,
+    radius: d['border-radius'] ? px(R(d['border-radius']), null) : null,
+    width: d.width ? px(R(d.width), null) : null,
+    height: (d.height || d['min-height']) ? px(R(d.height || d['min-height']), null) : null,
+    padY: d.padding ? px(R(d.padding), null) : null,
+    decls: d
+  };
+}
+
+/* Build variants + states from css rules alone.
+   base rule            -> the resting appearance
+   .base--modifier      -> a variant (or a size, if it only sets dimensions)
+   .base:pseudo         -> a state                                              */
+function modelFromCss(src, vars){
+  const rules = parseCssRules(src);
+  const classRules = rules.filter(r => /^\.[-\w]+$/.test(r.sel));
+  if(!classRules.length) return null;
+
+  let base = null, best = -1;
+  classRules.forEach(r => {
+    const built = rules.filter(x => x.sel !== r.sel && x.sel.indexOf(r.sel) === 0).length;
+    const score = built*10 + ((r.d.background||r.d['background-color']) ? 2 : 0) + (r.d.border ? 1 : 0);
+    if(score > best){ best = score; base = r; }
+  });
+  if(!base) return null;
+
+  const modRe   = new RegExp('^'+reEsc(base.sel)+'--([\\w-]+)$');
+  const stateRe = new RegExp('^'+reEsc(base.sel)+':([\\w-]+)$');
+
+  const mods = rules.filter(r => modRe.test(r.sel))
+                    .map(r => ({raw: modRe.exec(r.sel)[1], d: r.d}));
+  const sizeMods = mods.filter(m => Object.keys(m.d).length && Object.keys(m.d).every(DIMENSION_ONLY));
+  const varMods  = mods.filter(m => sizeMods.indexOf(m) < 0);
+  const stateRules = rules.filter(r => stateRe.test(r.sel))
+                          .map(r => ({raw: stateRe.exec(r.sel)[1], d: r.d}));
+
+  const baseName = titleCase(base.sel.replace(/^\./,'').replace(/-(track|box|field|container)$/,''));
+  const baseHasFill = !!(base.d.background || base.d['background-color']);
+  const VARIANTS = ((!baseHasFill && varMods.length) ? [] : [{id:'default', raw:baseName, name:baseName}]).concat(
+    varMods.map(m => ({id:key(m.raw), raw:m.raw, name:titleCase(m.raw)}))
+  );
+  const STATES = [{id:'default', name:'Default'}].concat(
+    stateRules.map(s => ({id:key(s.raw), name:titleCase(s.raw.replace('focus-visible','Keyboard focus')), explicit:true}))
+  );
+
+  const CELLS = {};
+  VARIANTS.forEach(v => {
+    const vd = (v.id === 'default' && baseHasFill) ? null : (varMods.find(m => key(m.raw) === v.id)||{}).d;
+    CELLS[v.id] = {};
+    STATES.forEach(st => {
+      const sd = st.id === 'default' ? null : (stateRules.find(s => key(s.raw) === st.id)||{}).d;
+      CELLS[v.id][st.id] = cellFromDecls([base.d, vd, sd], vars);
+    });
+  });
+
+  // sub-parts, e.g. .switch-thumb — needed to draw a switch properly
+  const PARTS = {};
+  rules.forEach(r => {
+    const m = /^\.[-\w]+[-_]{1,2}([\w-]+)$/.exec(r.sel);
+    if(m && !modRe.test(r.sel)) PARTS[key(m[1])] = cellFromDecls([r.d], vars);
+  });
+
+  const firstV = (VARIANTS[0]||{}).id;
+  const baseCell = (CELLS[firstV] && CELLS[firstV].default) || cellFromDecls([base.d], vars);
+  const SIZES = sizeMods.length
+    ? sizeMods.map(m => {
+        const c = cellFromDecls([m.d], vars);
+        return {raw:m.raw, name:titleCase(m.raw), height:c.height, width:c.width || baseCell.width};
+      })
+    : [{raw:'default', name:'Default', height:baseCell.height, width:baseCell.width}];
+
+  return {VARIANTS, STATES, CELLS, PARTS, SIZES, baseCell, rules};
+}
+
+/* A Variants table that carries Background / Border columns (tooltip.md) */
+function modelFromVariantTable(T, vars){
+  const t = T.variants;
+  if(!t) return null;
+  const h = t.headers;
+  const cBg = h.find(x=>/background|fill/i.test(x));
+  const cBd = h.find(x=>/border|outline/i.test(x));
+  if(!cBg && !cBd) return null;
+  const VARIANTS = t.rows.map(r => ({id:key(r[0]), raw:r[0], name:r[0].replace(/\s*\(.*?\)\s*/,'').trim()}));
+  const STATES = [{id:'default', name:'Default'}];
+  const CELLS = {};
+  t.obj.forEach(r => {
+    const id = key(r[h[0]]);
+    const bg = untick(r[cBg]||''), bd = untick(r[cBd]||'');
+    CELLS[id] = { default: {
+      bg: hexes(bg).length ? resolveVars(bg,vars) : null,
+      border: hexes(bd).length ? '1px '+resolveVars(bd,vars) : null,
+      note: h.find(x=>/usage|note/i.test(x)) ? untick(r[h.find(x=>/usage|note/i.test(x))]) : null
+    }};
+  });
+  return {VARIANTS, STATES, CELLS};
+}
+
+/* A file of colour tables and nothing else (colors.md) — render it as a palette */
+function modelFromTokens(DOC){
+  const groups = [];
+  walk(DOC, function(n){
+    n.tables.forEach(function(t){
+      const rows = t.obj.map(function(r){
+        const cols = t.headers.slice(1)
+          .map(function(h){ const hx = hexes(untick(r[h])); return hx.length ? {col:h, hex:hx[0]} : null; })
+          .filter(Boolean);
+        return cols.length ? {label: untick(r[t.headers[0]]), colors: cols,
+                              note: t.headers.find(function(h){return /usage/i.test(h);}) ? untick(r[t.headers.find(function(h){return /usage/i.test(h);})]) : ''} : null;
+      }).filter(Boolean);
+      if(rows.length >= 2) groups.push({title: n.title, rows: rows});
+    });
+  });
+  return groups.length >= 2 ? groups : null;
+}
+
+function buildModel(src, fallbackName){
+  WARN = [];
+  const DOC = parseMD(src);
+  const head = DOC.children[0] || {title:fallbackName, lines:[]};
+  const CSSVARS = parseCssVars(src);
+  const meta = (function(){
+    const l = (head.lines||[]).join(' ');
+    const v = /Version:\s*(v?[\d.]+)/i.exec(l), c = /Category:\s*([^>]+)/i.exec(l), p = /Preview:\s*(\w+)/i.exec(l);
+    const name = head.title || fallbackName;
+    let preview = p ? norm(p[1]) : null;
+    if(!preview){   // no explicit hint — infer from the component's name
+      const n = norm(name);
+      preview = /switch|toggle/.test(n) ? 'switch'
+              : /description|textarea|message/.test(n) ? 'textarea'
+              : /input|field|search|dropdown|select/.test(n) ? 'field'
+              : /checkbox|radio/.test(n) ? 'indicator' : 'box';
+    }
+    return {version:v?v[1]:'', category:c?c[1].trim():'', name, preview};
+  })();
+
+  const T = {
+    bg:tableOf(DOC,'Container Background Colors'), border:tableOf(DOC,'Container Border Colors'),
+    label:tableOf(DOC,'Label Text Colors'), loader:tableOf(DOC,'Loader Colors per Variant'),
+    variants:tableOf(DOC,'Variants'), sizes:tableOf(DOC,'Sizes'), pad:tableOf(DOC,'Spacing & Padding'),
+    focus:tableOf(DOC,'Focus Ring Layer (Keyboard Focus)'), labelLyr:tableOf(DOC,'Label Text Layer'),
+    groups:tableOf(DOC,'Button Grouping Combinations'), colorVar:tableOf(DOC,'Color Variants'),
+    states:tableOf(DOC,'States')
+  };
+  function indexBy(t,col){ const m={}; if(t) t.obj.forEach(r=>{ m[key(r[col||t.headers[0]])] = r; }); return m; }
+  const I = {
+    bg:indexBy(T.bg), border:indexBy(T.border), label:indexBy(T.label), loader:indexBy(T.loader),
+    variants:indexBy(T.variants), color:indexBy(T.colorVar,'Name')
+  };
+
+  /* ---- which shape is this file? ---- */
+  const statesTable = (T.states && T.states.headers.some(h=>/border|background|fill/i.test(h))) ? T.states : null;
+  let SHAPE = T.bg ? 'matrix' : (statesTable ? 'states' : null);
+
+  let VARIANTS = [], STATES = [], CELLS = {};
+
+  if(SHAPE === 'matrix'){
+    VARIANTS = T.bg.rows.map(r=>({id:key(r[0]), raw:r[0], name:PRETTY[r[0]]||r[0]}));
+    STATES = MATRIX_STATES_DEFAULT.slice();
+    VARIANTS.forEach(v=>{
+      const bgRow=I.bg[v.id]||{}, bdRow=I.border[v.id]||{}, ldRow=I.loader[v.id]||{};
+      CELLS[v.id] = {};
+      STATES.forEach(st=>{
+        if(st.id === 'loader'){
+          const raw = ldRow[T.loader?T.loader.headers[2]:''] || '';
+          const hx = hexes(raw);
+          CELLS[v.id].loader = {
+            bg: raw || null,
+            border: hx.length>1 ? '1px '+hx[1] : (bdRow['Default']||'None'),
+            spinner: hexes(ldRow[T.loader?T.loader.headers[1]:'']||'')[0] || null,
+            fallback: raw ? null : (bgRow['Click'] && bgRow['Click']!=='—' ? 'Click' : 'Default')
+          };
+        } else {
+          const col = st.col;
+          CELLS[v.id][st.id] = {
+            bg: (bgRow[col] && bgRow[col]!=='—') ? bgRow[col] : null,
+            border: (bdRow[col]!==undefined && bdRow[col]!=='—') ? bdRow[col] : (bdRow['Default']||'None'),
+            fallback: (bgRow[col] && bgRow[col]!=='—') ? null : 'Default'
+          };
+        }
+      });
+    });
+  }
+
+  if(SHAPE === 'states'){
+    // one implicit variant; the file's own state rows become the columns
+    const base = meta.name.replace(/\s*\(.*?\)\s*/g,'').trim().replace(/s$/,'') || 'Default';
+    VARIANTS = [{id:'default', raw:base, name:base}];
+    const h = statesTable.headers;
+    const cBorder = h.find(x=>/border|outline/i.test(x));
+    const cBg     = h.find(x=>/background|fill/i.test(x));
+    const cNotes  = h.find(x=>/note|desc/i.test(x));
+    CELLS.default = {};
+    STATES = statesTable.obj.map(r=>{
+      const nameRaw = r[h[0]];
+      const id = key(nameRaw);
+      const bgRaw = resolveVars(untick(r[cBg]||''), CSSVARS);
+      const bdRaw = resolveVars(untick(r[cBorder]||''), CSSVARS);
+      const note  = resolveVars(untick(r[cNotes]||''), CSSVARS);
+      const sh = /box-shadow\s*:\s*([^;`]+)/i.exec(note);
+      CELLS.default[id] = {
+        bg: /unchanged|inherit/i.test(bgRaw) || !hexes(bgRaw).length ? null : bgRaw,
+        border: /unchanged|inherit/i.test(bdRaw) || !hexes(bdRaw).length ? null : ('1px '+bdRaw),
+        shadow: sh ? resolveVars(sh[1].trim(), CSSVARS) : null,
+        note: note || null,
+        fallback: 'default'
+      };
+      return {id, name:nameRaw.replace(/\s*\/\s*/g,' / '), col:nameRaw, explicit:true};
+    });
+    if(!STATES.some(s=>s.id==='default')) STATES.unshift({id:'default', name:'Default', col:'Default'});
+  }
+
+  let PARTS = {}, TOKENGROUPS = null, cssSizes = null, baseCell = null;
+
+  if(!SHAPE){
+    const cm0 = modelFromCss(src, CSSVARS);
+    if(cm0 && cm0.VARIANTS.length > 1){
+      SHAPE='css'; VARIANTS=cm0.VARIANTS; STATES=cm0.STATES; CELLS=cm0.CELLS; PARTS=cm0.PARTS;
+      cssSizes=cm0.SIZES; baseCell=cm0.baseCell;
+      // a Variants table alongside the css still supplies the usage copy
+      if(T.variants){
+        const uh = T.variants.headers.find(h=>/usage|note|desc/i.test(h));
+        if(uh) T.variants.obj.forEach(r=>{
+          const id = key(r[T.variants.headers[0]]);
+          if(CELLS[id] && CELLS[id].default) CELLS[id].default.note = untick(r[uh]);
+        });
+      }
+    }
+  }
+  if(!SHAPE){
+    const vt = modelFromVariantTable(T, CSSVARS);
+    if(vt){ SHAPE='variants'; VARIANTS=vt.VARIANTS; STATES=vt.STATES; CELLS=vt.CELLS; }
+  }
+  if(!SHAPE){
+    const cm = modelFromCss(src, CSSVARS);
+    if(cm){
+      SHAPE='css';
+      VARIANTS=cm.VARIANTS; STATES=cm.STATES; CELLS=cm.CELLS; PARTS=cm.PARTS;
+      cssSizes=cm.SIZES; baseCell=cm.baseCell;
+    }
+  }
+  if(!SHAPE){
+    const tg = modelFromTokens(DOC);
+    if(tg){ SHAPE='tokens'; TOKENGROUPS=tg; }
+  }
+
+  /* ---- sizes ---- */
+  function padCell(rowLabel, col, fb){
+    if(!T.pad) return {main:fb, alt:fb, raw:''};
+    const r = T.pad.obj.find(o=>norm(o[T.pad.headers[0]])===norm(rowLabel));
+    if(!r) return {main:fb, alt:fb, raw:''};
+    const raw = r[col] || '';
+    const nums = String(raw).match(/(\d+(?:\.\d+)?)\s*px/g) || [];
+    return {main:px(nums[0],fb), alt:nums[1]?px(nums[1],fb):px(nums[0],fb), raw};
+  }
+  const containerT = tableOf(DOC,'Container Layer');
+  let docWidth = null;
+  if(containerT){
+    const r = containerT.obj.find(o=>/^(max\s*|min\s*)?width$/i.test(o[containerT.headers[0]]));
+    if(r) docWidth = px(r[containerT.headers[1]], null);
+  }
+  // css custom properties act as defaults when the file has no Spacing & Padding table
+  const cvRadius = varLike(CSSVARS, /radius/, null);
+  const cvPadY   = varLike(CSSVARS, /padding-?y|padding-?block/, null);
+  const cvPadX   = varLike(CSSVARS, /padding-?x|padding-?inline/, null);
+  const cvFont   = px(cssDecl(src,'font-size'), null);
+  const cvWeight = (/(\d{3})/.exec(cssDecl(src,'font-weight')||'')||[])[1] || null;
+  const cvFamily = (cssDecl(src,'font-family')||'').replace(/['"]/g,'').split(',')[0].trim() || null;
+  const cvGap    = px(cssDecl(src,'gap'), null);
+
+  const wcol = (T.sizes?T.sizes.headers:[]).find(h=>/width/i.test(h));
+  let SIZES = (T.sizes?T.sizes.rows:[]).map(r=>{
+    const o={}; T.sizes.headers.forEach((h,i)=>o[h]=r[i]);
+    const nm = o['Size'];
+    const col = (T.pad?T.pad.headers:[]).find(h=>norm(h).startsWith(norm(nm))) || (T.pad?T.pad.headers[1]:'');
+    const pl=padCell('Padding Left',col,cvPadX!=null?cvPadX:14), pr=padCell('Padding Right',col,cvPadX!=null?cvPadX:14);
+    const pt=padCell('Padding Top',col,cvPadY!=null?cvPadY:8),  pb=padCell('Padding Bottom',col,cvPadY!=null?cvPadY:8);
+    const gp=padCell('Item Spacing',col,cvGap!=null?cvGap:3);
+    return {
+      id:key(nm), name:nm, short:(nm==='Default'?'M':nm==='Small'?'S':'XS'),
+      height:px(o['Height'],32),
+      font:px(o['Font Size'], cvFont!=null?cvFont:14),
+      radius:px(o['Corner Radius'], cvRadius!=null?cvRadius:6),
+      icon:px(o['Icon Size'],16),
+      padL:pl.main, padR_chev:pr.main, padR_plain:pr.alt, padT:pt.main, padB:pb.main,
+      gap:gp.main, gapLoader:gp.alt,
+      width: wcol ? px(o[wcol], docWidth) : docWidth
+    };
+  }).sort((a,b)=>b.height-a.height);   // largest first, whatever order the markdown listed
+  if(!SIZES.length && cssSizes){
+    // width may only be stated in prose, e.g. "Width sampled at `390px`"
+    const sizeSec = section(DOC,'Sizes');
+    const prose = sizeSec ? (sizeSec.lines||[]).join(' ') : '';
+    const proseW = (/width[^.\n]*?(\d{2,4})\s*px/i.exec(prose)||[])[1];
+    SIZES = cssSizes.map(z=>({
+      id:key(z.raw), name:z.name, short:(z.name[0]||'M').toUpperCase(),
+      height: z.height || baseCell.height || 32,
+      font: cvFont!=null?cvFont:14,
+      radius: baseCell.radius!=null ? baseCell.radius : (cvRadius!=null?cvRadius:6),
+      icon: 16,
+      padL: cvPadX!=null?cvPadX:10, padR_chev: cvPadX!=null?cvPadX:10, padR_plain: cvPadX!=null?cvPadX:10,
+      padT: cvPadY!=null?cvPadY:8, padB: cvPadY!=null?cvPadY:8,
+      gap: cvGap!=null?cvGap:6, gapLoader:10,
+      width: z.width || (proseW?parseFloat(proseW):null) || baseCell.width || docWidth
+    })).sort((a,b)=>(b.height||0)-(a.height||0));
+  }
+  if(!SIZES.length) SIZES = [{id:'default',name:'Default',short:'M',height:32,
+    font:cvFont!=null?cvFont:14, radius:cvRadius!=null?cvRadius:6, icon:16,
+    padL:cvPadX!=null?cvPadX:14, padR_chev:cvPadX!=null?cvPadX:14, padR_plain:cvPadX!=null?cvPadX:14,
+    padT:cvPadY!=null?cvPadY:8, padB:cvPadY!=null?cvPadY:8, gap:cvGap!=null?cvGap:3, gapLoader:10, width:docWidth}];
+
+  const FOCUS = (function(){
+    const o={}; if(T.focus) T.focus.obj.forEach(r=>o[norm(r[T.focus.headers[0]])]=r[T.focus.headers[1]]);
+    const fromVar = Object.keys(CSSVARS).find(k=>/focus.*(outline|border|ring)/.test(k));
+    return {
+      width:px(o.width,2), offset:px(o.offset,2),
+      color: hexes(o.color||'')[0] || (fromVar ? (hexes(CSSVARS[fromVar])[0]||'#5464F2') : '#5464F2')
+    };
+  })();
+  const LABEL_FONT = (function(){
+    const o={}; if(T.labelLyr) T.labelLyr.obj.forEach(r=>o[norm(r[T.labelLyr.headers[0]])]=r[T.labelLyr.headers[1]]);
+    const w=/(\d{3})/.exec(o.fontweight||'');
+    return {
+      family: o.fontfamily || cvFamily || 'Inter',
+      weight: w ? w[1] : (cvWeight || '500'),
+      lineHeight: o.lineheight || 'AUTO'
+    };
+  })();
+  // text colour: a Label Text Colors table, else a placeholder/text custom property
+  const TEXT_FALLBACK = (function(){
+    const k = Object.keys(CSSVARS).find(k=>/placeholder|text/.test(k) && hexes(CSSVARS[k]).length);
+    return k ? hexes(CSSVARS[k])[0] : '#313949';
+  })();
+  const LINKS = (function(){
+    const s = section(DOC,'Links');
+    if(!s) return [];
+    return s.children.filter(c=>c.tables.length).map(c=>{
+      const h = c.tables[0].headers;
+      return {id:key(c.title), name:c.title, states:c.tables[0].obj.map(r=>({
+        state:r[h[0]], color:parseColor(r[h[1]]), token:r[h[2]], deco:r[h[3]]
+      }))};
+    });
+  })();
+  // guidance: numbered Do / Don't lists, or dashed Usage Rules bullets
+  const RULES = (function(){
+    const nums = n => (n?n.lines:[]).filter(l=>/^\s*\d+\.\s+/.test(l)).map(l=>l.replace(/^\s*\d+\.\s+/,''));
+    const dashes = n => (n?n.lines:[]).filter(l=>/^\s*[-*]\s+/.test(l)).map(l=>l.replace(/^\s*[-*]\s+/,''));
+    const ug = section(DOC,'Usage Guidelines') || DOC;
+    return {
+      do: nums(section(DOC,'Do')),
+      dont: nums(section(DOC,"Don't")),
+      notes: dashes(section(DOC,'Usage Rules')).concat(dashes(section(DOC,'Usage'))).slice(0,8)
+    };
+  })();
+
+  return {DOC, META:meta, T, I, SHAPE, CELLS, STATES, VARIANTS, SIZES, FOCUS, LABEL_FONT,
+          TEXT_FALLBACK, CSSVARS, PARTS, TOKENGROUPS, LINKS, RULES, WARN:WARN.slice(), src};
+}
+
+/* the active model — every render function below reads from M */
+let M = null, ACTIVE = null;
+const LIB = [];
+
+function registerMD(name, src){
+  const model = buildModel(src, name);
+  if(!model.VARIANTS.length && model.SHAPE!=='tokens') return {ok:false, why:'Needs either a “Container Background Colors” table (variants as rows) or a “States” table with Border / Background columns.'};
+  const id = norm(model.META.name || name);
+  const existing = LIB.findIndex(x=>x.id===id);
+  const item = {id, name:model.META.name||name, file:name, model};
+  if(existing>=0) LIB[existing]=item; else LIB.push(item);
+  return {ok:true, item};
+}
+
+/* ============================================================================
+   4. STYLE COMPUTATION — reads the normalised CELLS, so both shapes work
+   ========================================================================== */
+function computeStyle(vid,sid,stateId,opts){
+  opts = opts||{};
+  const T=M.T, I=M.I;
+  const st = M.STATES.find(s=>s.id===stateId) || M.STATES[0];
+  const size = M.SIZES.find(s=>s.id===sid) || M.SIZES[0];
+  const cell = ((M.CELLS[vid]||{})[st.id]) || {};
+  const notes = [];
+  const isLoader = st.id === 'loader';
+
+  let fill = parseFill(cell.bg);
+  if(!fill){
+    const fb = ((M.CELLS[vid]||{})[cell.fallback||'default'] || (M.CELLS[vid]||{})['default'] || {});
+    fill = parseFill(fb.bg);
+    if(cell.bg == null && st.id !== 'default'){
+      notes.push(isLoader
+        ? 'No loader row for this variant — using its resting fill.'
+        : '“'+st.name+'” is not defined in the markdown — inheriting Default.');
+    }
+  }
+  if(!fill) fill = {type:'none', colors:[], css:'transparent', opacity:1, raw:'—', tokens:[]};
+
+  let border = parseBorder(cell.border);
+  if(!cell.border){
+    const fb = ((M.CELLS[vid]||{})['default'] || {});
+    border = parseBorder(fb.border);
+  }
+
+  const lbRow = I.label[vid] || {};
+  const lc = parseColor(lbRow[T.label?T.label.headers[1]:'']||'');
+  const textColor = (cell.text && hexes(cell.text)[0]) || lc.hex || M.TEXT_FALLBACK;
+  let textAlpha = 1;
+  if(/disabl/.test(st.id) && fill.opacity>=1 && !/outline|ghost/.test(vid)) textAlpha = 0.5;
+
+  const containerOpacity = Math.min(fill.opacity, border.opacity==null?1:border.opacity);
+  const padR = opts.chevron ? size.padR_chev : size.padR_plain;
+  const ldRow = I.loader[vid] || {};
+
+  const outline = cell.outline ? parseBorder(cell.outline) : null;
+  return {
+    variantId:vid, sizeId:sid, stateId:st.id,
+    height: cell.height || size.height,
+    radius: cell.radius!=null ? cell.radius : size.radius,
+    font: cell.font || size.font, iconSize:size.icon,
+    padL: cell.padL!=null?cell.padL:size.padL, padR: cell.padR!=null?cell.padR:padR,
+    padT: cell.padT!=null?cell.padT:size.padT, padB: cell.padB!=null?cell.padB:size.padB,
+    gap:isLoader?size.gapLoader:size.gap,
+    width: cell.width || size.width,
+    fill, border, textColor, textAlpha, containerOpacity, isLoader,
+    cssOutline: outline && outline.width ? outline : null,
+    outlineOffset: px((cell.outline||'').split('offset')[1]||'', 0),
+    shadow: cell.shadow || null,
+    stateNote: cell.note || null,
+    spinner: cell.spinner || hexes(ldRow[T.loader?T.loader.headers[1]:'']||'')[0] || textColor,
+    focus: (st.synthetic && st.id==='focus') ? M.FOCUS
+         : (outline && outline.width ? {width:outline.width, color:outline.color, offset:px((cell.outline||'').split('offset')[1]||'',1)} : null),
+    fontFamily:M.LABEL_FONT.family, fontWeight:M.LABEL_FONT.weight,
+    tokenIds: [...new Set([].concat(fill.tokens||[], border.tokens||[], tokens(lbRow[T.label?T.label.headers[2]:'']||'')))],
+    notes, size
+  };
+}
+
+/* ============================================================================
+   5. RENDERERS
+   ========================================================================== */
+const ICON_PLUS = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M8 3.2v9.6M3.2 8h9.6"/></svg>';
+function chevronSVG(w,h){ return '<svg width="'+w+'" height="'+h+'" viewBox="0 0 10 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M1.6 2.6L5 6l3.4-3.4"/></svg>'; }
+function applyStyle(el,s){
+  el.style.height = s.height+'px';
+  if(s.fixedBox){ el.style.width = s.height+'px'; el.style.padding='0'; }
+  el.style.padding = s.padT+'px '+s.padR+'px '+s.padB+'px '+s.padL+'px';
+  el.style.borderRadius = s.radius+'px';
+  el.style.fontSize = s.font+'px';
+  el.style.fontWeight = s.fontWeight;
+  el.style.gap = s.gap+'px';
+  el.style.background = s.fill.css;
+  el.style.backgroundOrigin = 'padding-box';
+  el.style.backgroundClip = 'border-box';
+  el.style.color = rgba(s.textColor, s.textAlpha);
+  el.style.opacity = s.containerOpacity;
+  if(s.border.width){
+    el.style.borderWidth = s.border.width+'px';
+    el.style.borderColor = rgba(s.border.color, s.border.opacity==null?1:s.border.opacity);
+    if(s.border.gradient){
+      el.style.borderColor = 'transparent';
+      el.style.backgroundImage = s.fill.css+', linear-gradient(90deg,'+s.border.colors.join(',')+')';
+      el.style.backgroundOrigin = 'border-box';
+      el.style.backgroundClip = 'padding-box, border-box';
+    }
+  } else { el.style.borderWidth='0px'; el.style.borderColor='transparent'; }
+  el.style.boxShadow = s.shadow || 'none';
+  el.style.outline = s.focus ? s.focus.width+'px solid '+s.focus.color : 'none';
+  el.style.outlineOffset = s.focus ? s.focus.offset+'px' : '0';
+}
+function defaultLabel(vid){
+  const r = M.I.variants[vid];
+  let raw = r && M.T.variants ? r[M.T.variants.headers[1]] : null;
+  if(raw) raw = untick(raw).trim();
+  // guard against tables whose second column is a colour, not an example label
+  const looksLikeValue = !raw || raw==='—' || /^#|^var\(|^\d|gradient|solid|transparent|^none$/i.test(raw);
+  if(!looksLikeValue) return raw;
+  const v = M.VARIANTS.find(x=>x.id===vid);
+  if(M.META.preview==='field') return 'Enter '+String((v&&v.name)||'value').toLowerCase();
+  return (v && v.name) || M.META.name.replace(/s$/,'');
+}
+function buildNode(vid,sid,stateId,opts){
+  opts = opts||{};
+  const s = computeStyle(vid,sid,stateId,opts);
+  const shape = M.META.preview;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'display:inline-flex;align-items:center;gap:9px';
+
+  const el = document.createElement('div');
+  el.className='btn'; el.dataset.state=stateId;
+  applyStyle(el,s);
+
+  if(shape==='indicator'){
+    const d = s.width || s.height || Math.max(14, Math.round(s.height*0.5));
+    el.style.height = d+'px'; el.style.width = d+'px'; el.style.padding = '0';
+    const round = /radio/.test(norm(M.META.name)) || (s.radius!=null && s.radius>=d/2);
+    el.style.borderRadius = round ? '50%' : (s.radius!=null?s.radius:3)+'px';
+    const showTick = /check|select|indeterminate|active/.test(vid);
+    if(stateId!=='loader' && showTick){
+      el.innerHTML = '<svg width="'+Math.round(d*0.62)+'" height="'+Math.round(d*0.62)+'" viewBox="0 0 16 16" fill="none" stroke="'+rgba(s.textColor,s.textAlpha)+'" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 8.4l3 3 6-6.6"/></svg>';
+    }
+    wrap.appendChild(el);
+    const lab = document.createElement('span');
+    lab.textContent = opts.label!=null ? opts.label : defaultLabel(vid);
+    lab.style.cssText = 'font-size:'+s.font+'px;font-weight:'+s.fontWeight+';color:'+rgba(s.textColor,s.textAlpha)+';font-family:"'+s.fontFamily+'",Inter,sans-serif';
+    wrap.appendChild(lab);
+    return wrap;
+  }
+
+  if(shape==='switch'){
+    const parts = M.PARTS || {};
+    const track = M.SIZES.find(x=>x.id===sid) || M.SIZES[0];
+    const th = parts.thumb || {};
+    const tw = s.width || track.width || 30, thh = s.height || 18;
+    const thumbSize = th.width || Math.max(8, thh - 4);
+    const inset = Math.max(1, Math.round((thh - thumbSize)/2));
+    el.style.width = tw+'px'; el.style.height = thh+'px'; el.style.padding = '0';
+    el.style.borderRadius = (s.radius!=null && s.radius<100 ? s.radius : thh/2)+'px';
+    el.style.position = 'relative';
+    const knob = document.createElement('span');
+    const on = /active|on|checked/.test(vid);
+    knob.style.cssText = 'position:absolute;top:'+inset+'px;border-radius:50%;transition:left .15s ease;'+
+      'width:'+thumbSize+'px;height:'+thumbSize+'px;box-shadow:0 1px 2px rgba(0,0,0,.25);'+
+      'background:'+((th.bg && hexes(th.bg)[0]) || '#FFFFFF')+';'+
+      'left:'+(on ? (tw - inset - thumbSize) : inset)+'px';
+    el.appendChild(knob);
+    wrap.appendChild(el);
+    const lab=document.createElement('span');
+    lab.textContent = opts.label!=null ? opts.label : defaultLabel(vid);
+    lab.style.cssText='font-size:'+s.font+'px;font-weight:'+s.fontWeight+';color:'+M.TEXT_FALLBACK+';font-family:"'+s.fontFamily+'",Inter,sans-serif';
+    wrap.appendChild(lab);
+    return wrap;
+  }
+
+  if(shape==='textarea'){
+    const w = s.width || 390;
+    el.style.width = opts.compact ? '100%' : w+'px';
+    el.style.maxWidth = w+'px';
+    el.style.height = (s.height || 70)+'px';
+    el.style.alignItems = 'flex-start';
+    el.style.justifyContent = 'flex-start';
+    const t=document.createElement('span');
+    t.textContent = opts.label!=null ? opts.label : defaultLabel(vid);
+    t.style.opacity='.72';
+    el.appendChild(t);
+    wrap.appendChild(el);
+    return wrap;
+  }
+
+  if(shape==='field'){
+    const w = s.width || 220;
+    el.style.width = opts.compact ? '100%' : w+'px';
+    el.style.maxWidth = w+'px';
+    if(opts.compact) wrap.style.width = '100%';
+    el.style.justifyContent = 'flex-start';
+    const t=document.createElement('span');
+    t.textContent = opts.label!=null ? opts.label : defaultLabel(vid);
+    t.style.opacity = '.72';
+    el.appendChild(t);
+    if(s.focus) el.style.outline = s.focus.width+'px solid '+s.focus.color;
+    wrap.appendChild(el);
+    return wrap;
+  }
+
+  /* default: box (buttons, chips, tags, popups) */
+  if(s.isLoader){
+    const sp = document.createElement('span'); sp.className='spin';
+    sp.style.width=s.iconSize+'px'; sp.style.height=s.iconSize+'px';
+    sp.style.borderWidth=Math.max(1.5,s.iconSize/8)+'px'; sp.style.color=s.spinner;
+    el.appendChild(sp);
+  } else {
+    if(opts.icon){
+      const ic=document.createElement('span');
+      ic.style.cssText='display:block;width:'+s.iconSize+'px;height:'+s.iconSize+'px;flex:0 0 auto';
+      ic.innerHTML=ICON_PLUS; ic.firstChild.setAttribute('width',s.iconSize); ic.firstChild.setAttribute('height',s.iconSize);
+      el.appendChild(ic);
+    }
+    const t=document.createElement('span');
+    t.textContent = opts.label!=null ? opts.label : defaultLabel(vid);
+    el.appendChild(t);
+    if(vid==='ziaoutline'){
+      t.style.background='linear-gradient(90deg,#1471D9,#E21565)';
+      t.style.webkitBackgroundClip='text'; t.style.backgroundClip='text'; t.style.color='transparent';
+    }
+    if(opts.chevron){
+      const cw = sid==='default'?10:8, ch = sid==='default'?8:6;
+      const c=document.createElement('span'); c.style.cssText='display:flex;align-items:center;flex:0 0 auto';
+      c.innerHTML=chevronSVG(cw,ch); el.appendChild(c);
+    }
+  }
+  if(opts.interactive && stateId==='default'){
+    const set = st => applyStyle(el, computeStyle(vid,sid,st,opts));
+    el.addEventListener('mouseenter',()=>set('hover'));
+    el.addEventListener('mouseleave',()=>set('default'));
+    el.addEventListener('mousedown', ()=>set('click'));
+    el.addEventListener('mouseup',   ()=>set('hover'));
+  } else el.classList.add('no-int');
+  wrap.appendChild(el);
+  return wrap;
+}
+function buildLink(linkId, stateName){
+  const L = M.LINKS.find(l=>l.id===linkId)||M.LINKS[0];
+  if(!L) return document.createTextNode('');
+  const row = L.states.find(s=>norm(s.state)===norm(stateName)) || L.states[0];
+  const a = document.createElement('span');
+  a.className='lnk'; a.textContent = 'View all records';
+  a.style.color = rgba(row.color.hex||'#5464F2', row.color.opacity);
+  a.style.textDecoration = /underlin/i.test(row.deco) ? 'underline' : 'none';
+  a.style.textUnderlineOffset='2px';
+  return a;
+}
+
+/* ============================================================================
+   6. APP STATE + UI
+   ========================================================================== */
+const S = {
+  view:'component',           // 'component' | 'links'
+  variant:'', size:'', state:'default', mode:'all', tab:'design',
+  label:null, icon:false, chevron:false, dark:false, filter:'', tokenFilter:'', layout:null   /* null = auto */
+};
+const $ = id => document.getElementById(id);
+const MODES = [['all','All variants'],['single','Preview'],['sizes','Sizes'],['groups','Groups']];
+
+function activate(id, view){
+  const item = LIB.find(x=>x.id===id);
+  if(!item) return;
+  ACTIVE = item; M = item.model; WARN = M.WARN;
+  S.view = view || 'component';
+  S.variant = S.view==='links' ? (M.LINKS[0]||{}).id : ((M.VARIANTS[0]||{}).id||'');
+  S.size = M.SIZES[0].id;
+  S.tokenFilter='';
+  S.state = (M.STATES[0]||{id:'default'}).id; S.mode = 'all'; S.label = null; S.layout = null;
+  renderAll();
+}
+function matrixStates(){ return M.STATES.filter(st=>!st.synthetic); }
+/* Stacked is the default everywhere — it reads top-to-bottom and never needs a
+   horizontal scrollbar. The toggle switches to the side-by-side grid. */
+function autoLayout(){ return 'stack'; }
+function layoutMode(){ return S.layout || autoLayout(); }
+function modesFor(){
+  if(M.SHAPE==='tokens') return [['all','Palette']];
+  const list = MODES.filter(m=>{
+    if(m[0]==='groups') return !!M.T.groups;
+    if(m[0]==='sizes')  return M.SIZES.length>1;
+    return true;
+  });
+  return S.view==='links' ? [['all','All variants'],['single','Preview']] : list;
+}
+function icoSVG(p){ return '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>'; }
+const ICONS = {
+  button:'<path d="M4 5l7 14 2-6 6-2z"/>', link:'<path d="M9.5 14.5l5-5M7 12l-2 2a3.5 3.5 0 105 5l2-2M17 12l2-2a3.5 3.5 0 10-5-5l-2 2"/>',
+  field:'<path d="M4 7h16M4 12h10M4 17h16"/>', radio:'<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2" fill="currentColor" stroke="none"/>',
+  check:'<rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8.4 12.2l2.5 2.5 4.7-5"/>',
+  popup:'<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 9.5h18"/>',
+  toggle:'<rect x="2.5" y="7.5" width="19" height="9" rx="4.5"/><circle cx="16.5" cy="12" r="2.6" fill="currentColor" stroke="none"/>',
+  generic:'<rect x="3" y="6" width="18" height="12" rx="3"/>'
+};
+function iconFor(name){
+  const n = norm(name);
+  if(n.includes('button')) return ICONS.button;
+  if(n.includes('link'))   return ICONS.link;
+  if(n.includes('field')||n.includes('input')||n.includes('text')) return ICONS.field;
+  if(n.includes('radio'))  return ICONS.radio;
+  if(n.includes('check'))  return ICONS.check;
+  if(n.includes('popup')||n.includes('modal')||n.includes('dialog')) return ICONS.popup;
+  if(n.includes('toggle')||n.includes('switch')) return ICONS.toggle;
+  return ICONS.generic;
+}
+
+const PLACEHOLDERS = [
+  {name:'Text Field',      ico:ICONS.field,  match:/input|textfield|search/},
+  {name:'Radio Button',    ico:ICONS.radio,  match:/radio/},
+  {name:'Checkbox',        ico:ICONS.check,  match:/checkbox/},
+  {name:'Popup',           ico:ICONS.popup,  match:/popup|modal|dialog/},
+  {name:'Toggle Switch',   ico:ICONS.toggle, match:/switch|toggle/},
+  {name:'Text Area',       ico:ICONS.field,  match:/description|textarea/},
+  {name:'Tooltip',         ico:ICONS.popup,  match:/tooltip/},
+  {name:'Colors',          ico:ICONS.generic,match:/colou?r|palette|token/},
+  {name:'Dropdown Select', ico:'<path d="M6 9l6 7 6-7"/>', match:/dropdown|select/}
+];
+/* a placeholder disappears once a real .md covers it */
+function covered(ph){ return LIB.some(x=>ph.match.test(norm(x.name))); }
+function renderNav(){
+  const box = $('navList'); box.innerHTML='';
+  const f = norm(S.filter);
+  LIB.filter(x=>!f || norm(x.name).includes(f)).forEach(item=>{
+    const on = ACTIVE && item.id===ACTIVE.id;
+    const d = document.createElement('div');
+    d.className = 'nav-item'+(on && S.view==='component' ? ' active':'');
+    d.innerHTML = '<span class="nav-ico">'+icoSVG(iconFor(item.name))+'</span><span>'+item.name+'</span>'+
+                  '<span class="nav-count">'+(item.model.SHAPE==='tokens'
+                     ? (item.model.TOKENGROUPS||[]).reduce((n,g)=>n+g.rows.length,0)
+                     : item.model.VARIANTS.length)+'</span>';
+    d.onclick = ()=> activate(item.id,'component');
+    box.appendChild(d);
+  });
+  // links are their own top-level entry, not nested under the component
+  LIB.filter(x=>x.model.LINKS.length).forEach(item=>{
+    if(f && !norm('Link').includes(f)) return;
+    const on = ACTIVE && item.id===ACTIVE.id && S.view==='links';
+    const l = document.createElement('div');
+    l.className = 'nav-item'+(on?' active':'');
+    l.innerHTML = '<span class="nav-ico">'+icoSVG(ICONS.link)+'</span><span>Link</span>'+
+                  '<span class="nav-count">'+item.model.LINKS.length+'</span>';
+    l.onclick = ()=> activate(item.id,'links');
+    box.appendChild(l);
+  });
+  PLACEHOLDERS.filter(x=>!covered(x)).filter(x=>!f || norm(x.name).includes(f)).forEach(x=>{
+    const d = document.createElement('div');
+    d.className = 'nav-item locked';
+    d.innerHTML = '<span class="nav-ico">'+icoSVG(x.ico)+'</span><span>'+x.name+'</span><span class="nav-tag">.md</span>';
+    box.appendChild(d);
+  });
+  $('railFoot').innerHTML =
+    '<b>'+ACTIVE.file+'.md</b> · '+M.META.version+'<br>'+M.META.category+'<br>'+
+    (M.SHAPE==='tokens'
+      ? (M.TOKENGROUPS||[]).length+' groups · '+(M.TOKENGROUPS||[]).reduce((n,g)=>n+g.rows.length,0)+' colours'
+      : M.VARIANTS.length+' variant'+(M.VARIANTS.length===1?'':'s')+' · '+M.SIZES.length+' sizes · '+matrixStates().length+' states')+
+    (M.WARN.length?'<br><span style="color:#B4791A">'+M.WARN.length+' malformed value auto-corrected</span>':'');
+}
+function renderCrumbs(){
+  const modeName = (modesFor().find(m=>m[0]===S.mode)||['',''])[1];
+  const comp = S.view==='links' ? 'Link' : ACTIVE.name;
+  const chev = '<span class="sep"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></span>';
+  $('crumbs').innerHTML = '<span>Components</span>'+chev+'<span>'+comp+'</span>'+chev+'<span class="cur">'+modeName+'</span>';
+  $('artTitle').textContent = comp+' Artboard';
+  $('artSub').textContent = 'Viewing visual states and styles parsed from markdown schemas';
+}
+function renderModes(){
+  const cur = layoutMode();
+  $('layoutSeg').style.display = (S.mode==='all' && S.view!=='links' && M.SHAPE!=='tokens') ? 'inline-flex' : 'none';
+  $('layoutSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on', b.dataset.lay===cur));
+  const seg=$('modeSeg'); seg.innerHTML='';
+  modesFor().forEach(([id,name])=>{
+    const b=document.createElement('button'); b.textContent=name; b.className=S.mode===id?'on':'';
+    b.onclick=()=>{ S.mode=id; renderCrumbs(); renderModes(); renderCanvas(); };
+    seg.appendChild(b);
+  });
+}
+
+/* ---------- canvas ---------- */
+function renderCanvas(){
+  const art=$('artboard'); art.innerHTML=''; art.className='artboard'+(S.dark?' dark':'');
+  if(M.SHAPE==='tokens') return renderTokens(art);
+  if(S.view==='links') return renderLinkCanvas(art);
+  if(S.mode==='all')    return layoutMode()==='stack' ? renderStack(art) : renderMatrix(art);
+  if(S.mode==='single') return renderSingle(art);
+  if(S.mode==='sizes')  return renderSizes(art);
+  if(S.mode==='groups') return renderGroups(art);
+}
+function renderMatrix(art){
+  const mx=document.createElement('div'); mx.className='mx';
+  mx.style.gridTemplateColumns = 'max-content repeat('+matrixStates().length+', minmax(150px,1fr))';
+  mx.appendChild(document.createElement('div'));
+  matrixStates().forEach(st=>{
+    const h=document.createElement('div'); h.className='mx-col';
+    h.textContent=st.name; mx.appendChild(h);
+  });
+  M.VARIANTS.forEach((v,i)=>{
+    if(i){ const sep=document.createElement('div'); sep.className='mx-rowsep'; mx.appendChild(sep); }
+    const lb=document.createElement('div'); lb.className='mx-row-label'; lb.textContent=v.name; mx.appendChild(lb);
+    matrixStates().forEach(st=>{
+      const sid=st.id;
+      const c=document.createElement('div');
+      c.className='mx-cell'+(v.id===S.variant && sid===S.state?' on':'');
+      c.appendChild(buildNode(v.id,S.size,sid,{label:S.label,icon:S.icon,chevron:S.chevron,interactive:true}));
+      c.onclick=()=>{ S.variant=v.id; S.state=sid; renderAll(); };
+      mx.appendChild(c);
+    });
+  });
+  art.appendChild(mx);
+}
+function renderTokens(art){
+  const wrap=document.createElement('div'); wrap.className='tokset';
+  const f = norm(S.tokenFilter||'');
+  (M.TOKENGROUPS||[]).forEach(g=>{
+    const rows = g.rows.filter(r=>!f || norm(r.label).includes(f) || r.colors.some(c=>norm(c.hex).includes(f)));
+    if(!rows.length) return;
+    const box=document.createElement('div');
+    box.innerHTML = '<div class="tokgrp-title">'+g.title+' <span style="color:var(--muted);font-weight:500">· '+rows.length+'</span></div>';
+    const grid=document.createElement('div'); grid.className='swgrid';
+    rows.forEach(r=>{
+      const c=document.createElement('div'); c.className='swcard';
+      c.innerHTML =
+        '<div class="swbar">'+r.colors.map(x=>'<span style="background:'+x.hex+'" title="'+x.col+' '+x.hex+'"></span>').join('')+'</div>'+
+        '<div class="swmeta"><div class="swname">'+esc(r.label)+'</div>'+
+        '<div class="swhex">'+r.colors.map(x=>'<span>'+x.hex+'</span>').join('')+'</div>'+
+        (r.note?'<div class="swnote">'+esc(r.note)+'</div>':'')+'</div>';
+      c.onclick=()=>{
+        navigator.clipboard.writeText(r.colors.map(x=>x.hex).join(' '));
+        const n=c.querySelector('.swname'); const t=n.textContent; n.textContent='Copied'; setTimeout(()=>n.textContent=t,900);
+      };
+      grid.appendChild(c);
+    });
+    box.appendChild(grid); wrap.appendChild(box);
+  });
+  art.appendChild(wrap);
+}
+function renderStack(art){
+  const wrap=document.createElement('div'); wrap.className='vstack';
+  const states = matrixStates();
+  const anyNote = M.VARIANTS.some(v=>states.some(st=>((M.CELLS[v.id]||{})[st.id]||{}).note));
+  const cols = anyNote ? '140px minmax(0,auto) 1fr' : '140px minmax(0,1fr)';
+  M.VARIANTS.forEach(v=>{
+    const g=document.createElement('div'); g.className='vgroup';
+    if(M.VARIANTS.length>1){
+      const h=document.createElement('div'); h.className='vgroup-title'; h.textContent=v.name; g.appendChild(h);
+    }
+    states.forEach(st=>{
+      const row=document.createElement('div');
+      row.className='vrow'+(v.id===S.variant && st.id===S.state?' on':'');
+      row.style.gridTemplateColumns = cols;
+      const lb=document.createElement('div'); lb.className='vrow-label'; lb.textContent=st.name;
+      const cell=document.createElement('div'); cell.className='vrow-cell';
+      cell.appendChild(buildNode(v.id,S.size,st.id,{label:S.label,icon:S.icon,chevron:S.chevron,interactive:true}));
+      cell.insertAdjacentHTML('beforeend','<i class="tick t1"></i><i class="tick t2"></i><i class="tick t3"></i><i class="tick t4"></i>');
+      row.appendChild(lb); row.appendChild(cell);
+      if(anyNote){
+        const n=document.createElement('div'); n.className='vrow-note';
+        const note=((M.CELLS[v.id]||{})[st.id]||{}).note;
+        n.textContent = note || '';
+        row.appendChild(n);
+      }
+      row.onclick=()=>{ S.variant=v.id; S.state=st.id; renderAll(); };
+      g.appendChild(row);
+    });
+    wrap.appendChild(g);
+  });
+  art.appendChild(wrap);
+}
+function renderSingle(art){
+  const stage=document.createElement('div'); stage.className='stage';
+  const frame=document.createElement('div'); frame.className='frame';
+  const node=buildNode(S.variant,S.size,S.state,{label:S.label,icon:S.icon,chevron:S.chevron,interactive:true});
+  frame.appendChild(node);
+  frame.insertAdjacentHTML('beforeend','<div class="sel"><i class="handle tl"></i><i class="handle tr"></i><i class="handle bl"></i><i class="handle br"></i></div>');
+  const dim=document.createElement('div'); dim.className='dim'; frame.appendChild(dim);
+  stage.appendChild(frame); art.appendChild(stage);
+  requestAnimationFrame(()=>{ const r=node.getBoundingClientRect(); dim.textContent=Math.round(r.width)+' × '+Math.round(r.height); });
+}
+function renderSizes(art){
+  const row=document.createElement('div'); row.className='size-row';
+  M.SIZES.forEach(sz=>{
+    const c=document.createElement('div'); c.className='size-card'+(sz.id===S.size?' on':'');
+    c.appendChild(buildNode(S.variant,sz.id,S.state,{label:S.label,icon:S.icon,chevron:S.chevron,interactive:true}));
+    c.insertAdjacentHTML('beforeend','<div class="size-meta"><b>'+sz.name+'</b><span>'+sz.height+'h · '+sz.font+'px · r'+sz.radius+'</span></div>');
+    c.onclick=()=>{ S.size=sz.id; renderAll(); };
+    row.appendChild(c);
+  });
+  art.appendChild(row);
+}
+function renderGroups(art){
+  const wrap=document.createElement('div'); wrap.className='stack';
+  const T=M.T, h = T.groups?T.groups.headers:[];
+  (T.groups?T.groups.obj:[]).forEach(r=>{
+    const row=document.createElement('div'); row.className='group-row';
+    row.innerHTML='<div class="group-head"><span class="group-title">'+r[h[0]]+'</span><span class="group-use">'+r[h[2]]+'</span></div>';
+    const bar=document.createElement('div'); bar.className='group-btns';
+    const parts=String(r[h[1]]).split('+').map(p=>p.trim());
+    parts.slice().sort((a,b)=>(key(a)==='primary'?1:0)-(key(b)==='primary'?1:0)).forEach(p=>{
+      const vid=key(p); if(M.I.bg[vid]) bar.appendChild(buildNode(vid,S.size,'default',{interactive:true}));
+    });
+    row.appendChild(bar); wrap.appendChild(row);
+  });
+  art.appendChild(wrap);
+}
+function renderLinkCanvas(art){
+  if(S.mode==='single'){
+    const stage=document.createElement('div'); stage.className='stage';
+    stage.appendChild(buildLink(S.variant, S.state==='disabled'?'Disabled':S.state));
+    art.appendChild(stage); return;
+  }
+  const cols = (M.LINKS[0]||{states:[]}).states.map(s=>s.state);
+  const mx=document.createElement('div'); mx.className='mx';
+  mx.style.gridTemplateColumns='max-content repeat('+cols.length+', minmax(150px,1fr))';
+  mx.appendChild(document.createElement('div'));
+  cols.forEach(c=>{ const h=document.createElement('div'); h.className='mx-col'; h.textContent=c; mx.appendChild(h); });
+  M.LINKS.forEach((L,i)=>{
+    if(i){ const sep=document.createElement('div'); sep.className='mx-rowsep'; mx.appendChild(sep); }
+    const lb=document.createElement('div'); lb.className='mx-row-label'; lb.textContent=L.name; mx.appendChild(lb);
+    cols.forEach(c=>{
+      const cell=document.createElement('div');
+      cell.className='mx-cell'+(L.id===S.variant && norm(c)===norm(S.state)?' on':'');
+      cell.appendChild(buildLink(L.id,c));
+      cell.onclick=()=>{ S.variant=L.id; S.state=norm(c); renderAll(); };
+      mx.appendChild(cell);
+    });
+  });
+  art.appendChild(mx);
+}
+
+/* ---------- inspector ---------- */
+function grp(t, inner, right){
+  return '<div class="grp"><div class="grp-t"><span class="cap">'+t+'</span>'+(right||'')+'</div>'+inner+'</div>';
+}
+function swatchHTML(s){
+  if(s.fill.type==='gradient') return '<span class="sw grad" style="background:'+s.fill.css+'"></span>';
+  if(s.fill.type==='solid')    return '<span class="sw" style="background:'+s.fill.colors[0]+'"></span>';
+  return '<span class="sw" style="background:repeating-linear-gradient(45deg,#EEE,#EEE 3px,#FFF 3px,#FFF 6px)"></span>';
+}
+function renderInspector(){
+  const b=$('inspBody');
+  if(M.SHAPE==='tokens'){
+    const total=(M.TOKENGROUPS||[]).reduce((n,g)=>n+g.rows.length,0);
+    b.innerHTML =
+      grp('Search','<input class="field" id="tokFind" placeholder="Filter by name or hex…" value="'+(S.tokenFilter||'')+'">') +
+      grp('Groups','<div class="tokens">'+(M.TOKENGROUPS||[]).map(g=>
+        '<div class="trow"><span class="tk">'+g.title+'</span><span class="tv">'+g.rows.length+'</span></div>').join('')+'</div>') +
+      grp('Total','<div class="kv"><span class="k">colour entries</span><span class="v">'+total+'</span></div>') +
+      grp('Rules', M.RULES.notes.length
+        ? '<div class="doc"><ul>'+M.RULES.notes.map(x=>'<li>'+x+'</li>').join('')+'</ul></div>'
+        : '<span style="color:var(--muted)">No rules section.</span>',
+        '<span class="link" id="lnkTok">View source</span>');
+    $('tokFind').oninput = e => { S.tokenFilter = e.target.value; renderCanvas(); };
+    const lt=$('lnkTok'); if(lt) lt.onclick=openSource;
+    return;
+  }
+  if(S.view==='links') return renderLinkInspector(b);
+  const T=M.T, I=M.I;
+  const v = M.VARIANTS.find(x=>x.id===S.variant)||M.VARIANTS[0];
+  const s = computeStyle(S.variant,S.size,S.state,{chevron:S.chevron});
+
+  if(S.tab==='design'){
+    const fillVal = s.fill.type==='gradient' ? s.fill.colors[0]+' → '+s.fill.colors[1]
+      : s.fill.type==='solid' ? s.fill.colors[0] : 'transparent';
+    const rows = [
+      ['bg-'+S.state, fillVal, swatchHTML(s), true],
+      ['text-color', s.textColor, '<span class="sw" style="background:'+s.textColor+'"></span>', true],
+      ['border', s.border.width? s.border.width+'px '+s.border.color : 'none',
+        s.border.width?'<span class="sw" style="background:'+s.border.color+'"></span>':'', false],
+      ['border-radius', s.radius+'px','',false],
+      ['height', s.height+'px','',false]
+    ];
+    if(s.width) rows.push(['max-width', s.width+'px','',false]);
+    rows.push(
+      ['padding-x', s.padL+'px / '+s.padR+'px','',false],
+      ['padding-y', s.padT+'px','',false],
+      ['item-spacing', s.gap+'px','',false],
+      ['font-size', s.font+'px','',false],
+      ['font-weight', s.fontWeight,'',false],
+      ['line-height', M.LABEL_FONT.lineHeight,'',false],
+      ['font-family', s.fontFamily,'',false],
+      ['icon-size', s.iconSize+'px','',false]
+    );
+    b.innerHTML =
+      grp('Variant Select','<div class="pills">'+M.VARIANTS.map(x=>'<span class="pill'+(x.id===S.variant?' on':'')+'" data-v="'+x.id+'">'+x.name+'</span>').join('')+'</div>') +
+      grp('Interactive State','<div class="radios">'+M.STATES.map(x=>'<span class="radio'+(x.id===S.state?' on':'')+'" data-s="'+x.id+'"><i></i>'+x.name+'</span>').join('')+'</div>') +
+      grp('Token Mapping','<div class="tokens">'+rows.map(r=>
+          '<div class="trow"><span class="tk">'+r[0]+'</span><span class="tv'+(r[3]?' hex':'')+'">'+r[2]+r[1]+'</span></div>').join('')+'</div>' +
+          (s.tokenIds.length?'<div class="tokchips">'+s.tokenIds.map(t=>'<span class="tok">'+t+'</span>').join('')+'</div>':''),
+        '<span class="link" id="lnkTokens">View source</span>') +
+      (M.SIZES.length>1 ? grp('Responsive Sizes','<div id="sizeStrip" class="size-row"></div>') : '') +
+      grp('Content',
+        '<input class="field" id="inpLabel" placeholder="'+defaultLabel(S.variant)+'" value="'+(S.label==null?'':String(S.label).replace(/"/g,'&quot;'))+'">'+
+        '<div class="rowsw"><label>Leading icon</label><div class="tog'+(S.icon?' on':'')+'" id="togIcon"></div></div>'+
+        '<div class="rowsw"><label>Trailing chevron</label><div class="tog'+(S.chevron?' on':'')+'" id="togChev"></div></div>') +
+      grp('Guidelines','<div class="callout"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h11M4 18h7"/></svg><span>'+guidanceFor(S.variant)+'</span></div>') +
+      (s.notes.length ? grp('Parser Notes', s.notes.map(n=>'<div class="callout plain">'+n+'</div>').join('')) : '');
+
+    b.querySelectorAll('[data-v]').forEach(e=>e.onclick=()=>{S.variant=e.dataset.v;S.label=null;renderAll();});
+    b.querySelectorAll('[data-s]').forEach(e=>e.onclick=()=>{S.state=e.dataset.s;renderAll();});
+    $('inpLabel').oninput = e => { S.label = e.target.value===''?null:e.target.value; renderCanvas(); };
+    $('togIcon').onclick = ()=>{ S.icon=!S.icon; renderAll(); };
+    $('togChev').onclick = ()=>{ S.chevron=!S.chevron; renderAll(); };
+    $('lnkTokens').onclick = openSource;
+    const strip=$('sizeStrip');
+    if(strip) M.SIZES.slice().reverse().forEach(sz=>{
+      const c=document.createElement('div'); c.className='size-card'+(sz.id===S.size?' on':'');
+      c.style.cssText='min-width:0;flex:1;padding:16px 10px 10px;gap:11px';
+      c.appendChild(buildNode(S.variant,sz.id,'default',{label:defaultLabel(S.variant),compact:true}));
+      c.insertAdjacentHTML('beforeend','<div class="size-meta"><b>'+sz.short+'</b><span>'+sz.height+'h</span></div>');
+      c.onclick=()=>{ S.size=sz.id; renderAll(); };
+      strip.appendChild(c);
+    });
+    return;
+  }
+
+  /* ---- Inspect ---- */
+  const sw = c => '<span class="sw" style="background:'+c+'"></span>';
+  const fillTxt = s.fill.type==='gradient'
+    ? swatchHTML(s)+s.fill.colors[0]+' → '+s.fill.colors[1]+' · '+s.fill.angle+'deg'
+    : s.fill.type==='solid' ? sw(s.fill.colors[0])+s.fill.colors[0] : 'transparent';
+  const vr = I.variants[S.variant], vh = T.variants?T.variants.headers:[];
+  const li = arr => '<ul>'+arr.map(x=>{ const m=/^([^-–—]+?)\s+[-–—]\s+(.*)$/.exec(x); return '<li>'+(m?'<b>'+m[1]+'</b> — '+m[2]:x)+'</li>'; }).join('')+'</ul>';
+  const dos=M.RULES.do, donts=M.RULES.dont, notes=M.RULES.notes;
+
+  b.innerHTML =
+    grp('Computed · '+v.name+' · '+((M.STATES.find(x=>x.id===S.state)||{}).name||''),
+      '<div class="kv"><span class="k">Fill</span><span class="v">'+fillTxt+'</span></div>'+
+      '<div class="kv"><span class="k">Border</span><span class="v">'+(s.border.width?sw(s.border.color)+s.border.width+'px '+s.border.color+(s.border.opacity<1?' @'+s.border.opacity:''):'none')+'</span></div>'+
+      '<div class="kv"><span class="k">Text</span><span class="v">'+sw(s.textColor)+s.textColor+(s.textAlpha<1?' @'+s.textAlpha:'')+'</span></div>'+
+      (s.isLoader?'<div class="kv"><span class="k">Spinner</span><span class="v">'+sw(s.spinner)+s.spinner+'</span></div>':'')+
+      (s.containerOpacity<1?'<div class="kv"><span class="k">Opacity</span><span class="v">'+s.containerOpacity+'</span></div>':'')+
+      '<div class="kv"><span class="k">Typography</span><span class="v">'+s.fontFamily+' '+s.fontWeight+' '+s.font+'px</span></div>'+
+      '<div class="kv"><span class="k">Focus ring</span><span class="v">'+M.FOCUS.width+'px '+M.FOCUS.color+' @'+M.FOCUS.offset+'px</span></div>') +
+    grp('Raw markdown values',
+      '<div class="kv"><span class="k">background</span><span class="v">'+esc(s.fill.raw)+'</span></div>'+
+      '<div class="kv"><span class="k">border</span><span class="v">'+esc(s.border.raw||'None')+'</span></div>') +
+    grp('Generated CSS','<pre class="code">'+cssFor(S.variant,S.size)+'</pre>','<button class="copy" id="copyIn">Copy</button>') +
+    (function(){
+      const spec = buildScopedSpec(S.variant,S.size);
+      const full = estTokens(M.src), one = estTokens(spec);
+      const pct = Math.round((1-one/full)*100);
+      return grp('Scoped spec for AI',
+        '<div class="callout plain" style="margin-bottom:9px"><span>Send an agent <b>only this variant</b> — '+
+        '≈'+one.toLocaleString()+' tokens instead of ≈'+full.toLocaleString()+' for the whole file '+
+        '(<b>'+pct+'% less</b>). Colour values are the raw markdown strings, so nothing is lost in translation.</span></div>'+
+        '<pre class="code">'+esc(spec)+'</pre>',
+        '<button class="copy" id="copySpec">Copy spec</button>');
+    })() +
+    (vr ? grp('Usage',
+      '<div class="kv"><span class="k">Emphasis</span><span class="v" style="font-family:var(--sans);font-size:12.2px">'+vr[vh[2]]+'</span></div>'+
+      '<div class="kv"><span class="k">Fill type</span><span class="v">'+vr[vh[3]]+'</span></div>'+
+      '<div class="kv"><span class="k">Border</span><span class="v">'+vr[vh[4]]+'</span></div>') : '') +
+    (dos.length ? grp('Do','<div class="doc do">'+li(dos)+'</div>') : '') +
+    (donts.length ? grp("Don't",'<div class="doc dont">'+li(donts)+'</div>') : '') +
+    (!dos.length && !donts.length && notes.length ? grp('Usage rules','<div class="doc">'+li(notes)+'</div>') : '') +
+    (s.stateNote ? grp('This state','<div class="callout plain"><span>'+esc(s.stateNote)+'</span></div>') : '') +
+    (M.WARN.length ? grp('MD lint', M.WARN.map(w=>'<div class="callout plain"><span><b>'+w.raw+'</b> → '+w.fixed+' · '+w.why+'</span></div>').join('')) : '');
+  const ci=$('copyIn'); if(ci) ci.onclick=copyCSS;
+  const cs=$('copySpec'); if(cs) cs.onclick=()=>copyScoped(cs);
+}
+function guidanceFor(vid){
+  const vr = M.I.variants[vid];
+  const usage = (vr && M.T.variants ? vr[M.T.variants.headers[2]] : '') || M.RULES.notes[0] || '';
+  const dos = M.RULES.do;
+  let extra = '';
+  if(vid==='primary')  extra = dos.find(d=>/hierarchy|Primary/i.test(d))||'';
+  if(vid==='negative') extra = dos.find(d=>/Destructive/i.test(d))||'';
+  if(/outline|ghost/.test(vid)) extra = dos.find(d=>/Always pair/i.test(d))||'';
+  return (usage||'No usage row for this variant in the markdown.') + (extra? ' '+extra : '');
+}
+function renderLinkInspector(b){
+  const L = M.LINKS.find(l=>l.id===S.variant)||M.LINKS[0];
+  b.innerHTML =
+    grp('Variant Select','<div class="pills">'+M.LINKS.map(l=>'<span class="pill'+(l.id===S.variant?' on':'')+'" data-lv="'+l.id+'">'+l.name+'</span>').join('')+'</div>') +
+    grp('Interactive State','<div class="radios">'+L.states.map(s=>'<span class="radio'+(norm(s.state)===S.state?' on':'')+'" data-ls="'+norm(s.state)+'"><i></i>'+s.state+'</span>').join('')+'</div>') +
+    grp('Token Mapping','<div class="tokens">'+L.states.map(s=>
+      '<div class="trow"><span class="tk">'+norm(s.state)+'</span><span class="tv hex"><span class="sw" style="background:'+(s.color.hex||'#000')+'"></span>'+(s.color.hex||'—')+'</span></div>'+
+      '<div class="trow"><span class="tk">'+norm(s.state)+'-decoration</span><span class="tv">'+s.deco+'</span></div>').join('')+'</div>'+
+      '<div class="tokchips">'+[...new Set(L.states.map(s=>s.token))].map(t=>'<span class="tok">'+t+'</span>').join('')+'</div>',
+      '<span class="link" id="lnkSrcL">View source</span>');
+  const ls=$('lnkSrcL'); if(ls) ls.onclick = openSource;
+  b.querySelectorAll('[data-lv]').forEach(e=>e.onclick=()=>{S.variant=e.dataset.lv;renderAll();});
+  b.querySelectorAll('[data-ls]').forEach(e=>e.onclick=()=>{S.state=e.dataset.ls;renderAll();});
+}
+
+/* ---------- CSS generation ---------- */
+function cssFor(vid,sid){
+  const v=M.VARIANTS.find(x=>x.id===vid);
+  const cls='.'+norm(M.META.name).replace(/s$/,'')+'--'+vid;
+  const base=computeStyle(vid,sid,'default',{chevron:S.chevron});
+  const L=[]; const P=(k,val)=>L.push('  <span class="c-p">'+k+'</span>: <span class="c-v">'+val+'</span>;');
+  L.push('<span class="c-s">/* '+v.name+' · '+base.size.name+' · generated from '+ACTIVE.file+' */</span>');
+  L.push(cls+' {');
+  P('display','inline-flex'); P('align-items','center'); P('justify-content','center');
+  P('height',base.height+'px');
+  if(base.width) P('max-width',base.width+'px');
+  if(base.width && M.META.preview==='field') P('width','100%');
+  P('padding',base.padT+'px '+base.padR+'px '+base.padB+'px '+base.padL+'px');
+  P('gap',base.gap+'px'); P('border-radius',base.radius+'px');
+  P('border',base.border.width?base.border.width+'px solid '+base.border.color:'none');
+  P('background',base.fill.css);
+  P('color',rgba(base.textColor,base.textAlpha));
+  P('font',base.fontWeight+' '+base.font+'px/1 "'+base.fontFamily+'", sans-serif');
+  P('cursor','pointer');
+  L.push('}');
+  [['hover',':hover'],['click',':active'],['disabled','[disabled]']].forEach(([st,sel])=>{
+    const c=computeStyle(vid,sid,st,{chevron:S.chevron});
+    L.push(cls+sel+' {');
+    P('background',c.fill.css);
+    if(c.border.width) P('border-color',rgba(c.border.color,c.border.opacity==null?1:c.border.opacity));
+    if(c.textAlpha<1) P('color',rgba(c.textColor,c.textAlpha));
+    if(c.containerOpacity<1) P('opacity',c.containerOpacity);
+    L.push('}');
+  });
+  const ld=computeStyle(vid,sid,'loader',{});
+  L.push(cls+'.is-loading {');
+  P('background',ld.fill.css);
+  if(ld.border.width) P('border-color',ld.border.color);
+  P('color','transparent');
+  L.push('}');
+  L.push(cls+':focus-visible {');
+  P('outline',M.FOCUS.width+'px solid '+M.FOCUS.color); P('outline-offset',M.FOCUS.offset+'px');
+  L.push('}');
+  return L.join('\n');
+}
+/* ---------- scoped spec: only what an AI needs for ONE variant ---------- */
+function buildScopedSpec(vid, sid){
+  const T=M.T, I=M.I;
+  const v = M.VARIANTS.find(x=>x.id===vid);
+  const size = M.SIZES.find(x=>x.id===sid);
+  const bg=I.bg[vid]||{}, bd=I.border[vid]||{}, lb=I.label[vid]||{}, ld=I.loader[vid]||{};
+  const L=[];
+  L.push('# '+M.META.name+' — '+v.name);
+  L.push(('> Source: '+ACTIVE.file+'.md '+(M.META.version||'')).trim()+' · scoped slice for one variant, not the full file');
+  L.push('');
+  L.push('## Container — '+v.name);
+  L.push('');
+  L.push('| State | Background | Border |');
+  L.push('|---|---|---|');
+  M.STATES.filter(st=>!st.synthetic).forEach(st=>{
+    const c = (M.CELLS[vid]||{})[st.id] || {};
+    L.push('| '+st.name+' | '+(c.bg||'(inherits Default)')+' | '+(c.border||'(inherits Default)')+
+           (c.spinner?' spinner '+c.spinner:'')+' |');
+  });
+  L.push('');
+  L.push('## Label');
+  L.push('');
+  L.push('| Property | Value |');
+  L.push('|---|---|');
+  L.push('| Color | '+(lb[T.label?T.label.headers[1]:''] || M.TEXT_FALLBACK)+' |');
+  if(lb[T.label?T.label.headers[2]:'']) L.push('| Token | '+lb[T.label.headers[2]]+' |');
+  L.push('| Font Family | '+M.LABEL_FONT.family+' |');
+  L.push('| Font Weight | '+M.LABEL_FONT.weight+' |');
+  L.push('| Line Height | '+M.LABEL_FONT.lineHeight+' |');
+  L.push('');
+  L.push('## Size — '+size.name);
+  L.push('');
+  L.push('| Property | Value |');
+  L.push('|---|---|');
+  L.push('| Height | '+size.height+'px |');
+  if(size.width) L.push('| Max Width | '+size.width+'px |');
+  L.push('| Corner Radius | '+size.radius+'px |');
+  L.push('| Padding | '+size.padT+'px '+size.padR_plain+'px '+size.padB+'px '+size.padL+'px |');
+  L.push('| Item Spacing | '+size.gap+'px |');
+  L.push('| Font Size | '+size.font+'px |');
+  L.push('| Icon Size | '+size.icon+'px |');
+  L.push('| Focus Ring | '+M.FOCUS.width+'px '+M.FOCUS.color+' offset '+M.FOCUS.offset+'px |');
+  const vr = I.variants[vid], vh = T.variants?T.variants.headers:[];
+  if(vr){
+    L.push('');
+    L.push('## Usage');
+    L.push('');
+    L.push('- Emphasis: '+vr[vh[2]]);
+    L.push('- Example label: '+vr[vh[1]]);
+  }
+  // cross-cutting rules — small, but they are what make the output correct
+  const dos=M.RULES.do, donts=M.RULES.dont;
+  if(dos.length){ L.push(''); L.push('## Do'); L.push(''); dos.forEach((d,i)=>L.push((i+1)+'. '+d)); }
+  if(donts.length){ L.push(''); L.push("## Don't"); L.push(''); donts.forEach((d,i)=>L.push((i+1)+'. '+d)); }
+  if(!dos.length && !donts.length && M.RULES.notes.length){
+    L.push(''); L.push('## Usage rules'); L.push('');
+    M.RULES.notes.forEach(d=>L.push('- '+d));
+  }
+  // only the grouping rows this variant actually appears in
+  if(T.groups){
+    const h=T.groups.headers;
+    const rows = T.groups.obj.filter(r=>String(r[h[1]]).split('+').some(p=>key(p)===vid));
+    if(rows.length){
+      L.push(''); L.push('## Pairings for this variant'); L.push('');
+      L.push('| Pattern | '+h[1]+' | '+h[2]+' |'); L.push('|---|---|---|');
+      rows.forEach(r=>L.push('| '+r[h[0]]+' | '+r[h[1]]+' | '+r[h[2]]+' |'));
+      const gr = section(M.DOC,'Button Group Rules');
+      if(gr){ (gr.lines||[]).filter(l=>/^\s*[-*]\s+/.test(l)).forEach(l=>L.push(l.trim())); }
+    }
+  }
+  return L.join('\n');
+}
+const estTokens = t => Math.round(t.length/4);
+function copyScoped(btn){
+  const spec = buildScopedSpec(S.variant, S.size);
+  navigator.clipboard.writeText(spec).then(()=>{
+    const t=btn.textContent; btn.textContent='Copied'; setTimeout(()=>btn.textContent=t,1300);
+  });
+}
+function plainCSS(){ return cssFor(S.variant,S.size).replace(/<[^>]+>/g,'').replace(/&amp;/g,'&'); }
+function copyCSS(){
+  navigator.clipboard.writeText(plainCSS()).then(()=>{
+    const b=$('btnCopyCss'); const t=b.textContent; b.textContent='Copied'; setTimeout(()=>b.textContent=t,1200);
+  });
+}
+function openSource(){
+  if(S.view==='links'){
+    const slice = sliceSection(M.src,'Links');
+    $('sheetPre').textContent = slice || M.src;
+    $('sheetTitle').textContent = ACTIVE.file+'.md \u203a ## Links';
+  } else {
+    $('sheetPre').textContent = M.src;
+    $('sheetTitle').textContent = ACTIVE.file+'.md';
+  }
+  $('sheetBody').scrollTop = 0;
+  $('modal').classList.add('on');
+}
+
+/* ---------- events ---------- */
+$('tabs').querySelectorAll('button').forEach(t=>t.onclick=()=>{ S.tab=t.dataset.tab; renderAll(); });
+$('layoutSeg').querySelectorAll('button').forEach(t=>t.onclick=()=>{
+  S.layout = t.dataset.lay; renderAll();
+});
+$('bgSeg').querySelectorAll('button').forEach(t=>t.onclick=()=>{
+  S.dark = t.dataset.bg==='dark';
+  $('bgSeg').querySelectorAll('button').forEach(x=>x.classList.remove('on'));
+  t.classList.add('on'); renderCanvas();
+});
+$('btnCopyCss').onclick=copyCSS;
+$('btnCopySpec').onclick=()=>copyScoped($('btnCopySpec'));
+$('btnSource').onclick=openSource;
+$('sheetClose').onclick=()=>$('modal').classList.remove('on');
+$('modal').onclick=e=>{ if(e.target===$('modal')) $('modal').classList.remove('on'); };
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') $('modal').classList.remove('on'); });
+$('findInput').oninput = e => { S.filter=e.target.value; renderNav(); };
+
+(function(){ const l=document.createElement('link'); l.rel='icon'; l.href=document.querySelector('.logo').src; document.head.appendChild(l); })();
+
+function renderAll(){
+  renderNav(); renderCrumbs(); renderModes(); renderCanvas();
+  $('tabs').querySelectorAll('button').forEach(t=>t.classList.toggle('on',t.dataset.tab===S.tab));
+  $('tabs').style.display = (S.view==='links' || M.SHAPE==='tokens') ? 'none' : 'flex';
+  renderInspector();
+}
+
+/* ---------- boot: load every .md baked into this file ----------
+   Deferred to DOMContentLoaded so that .md <script> tags appended by a previous
+   Export (which land at the end of <body>, after this script) are parsed first. */
+function boot(){
+  [...document.querySelectorAll('script[data-md]')].forEach(tag=>{
+    registerMD(tag.getAttribute('data-md'), tag.textContent);
+  });
+  if(LIB.length) activate(LIB[0].id,'component');
+  console.log('[Component Spec] library:', LIB.map(x=>x.name+' ('+x.model.VARIANTS.length+')').join(', '));
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot);
+else boot();
+
+</script>
+</body>
+</html>
